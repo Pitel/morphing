@@ -6,15 +6,10 @@
 using namespace std;
 using namespace cv;
 
-
-typedef struct {
-	float x, y;
-} souradnice;
-
 void morph(const Mat &img1, const Mat &img2, Mat &out) {
-	int pocet = 5;
-	souradnice grid1[6][6];
-	souradnice grid2[6][6];
+	const unsigned short pocet = 5;
+	CvPoint grid1[pocet + 1][pocet + 1];
+	CvPoint grid2[pocet + 1][pocet + 1];
 	float width = img1.size().width;
 	float height = img1.size().height;
 	for(int i=0; i<=pocet; i++){
