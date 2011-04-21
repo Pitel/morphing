@@ -6,6 +6,6 @@ using namespace cv;
 #define CVMORPH_H
 
 #define QUALITY INTER_LANCZOS4
-void morph(const Mat &input);
+void morph(const Mat &img1, const Mat &img2, Mat &out);
 
 #endif

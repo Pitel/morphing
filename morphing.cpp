@@ -9,14 +9,19 @@
 using namespace std;
 using namespace cv;
 
-int main (int argc, char **argv) {
+int main(int argc, char *argv[]) {
 	const char *imagename = argc > 1 ? argv[1] : "Lenna.png";
 	cout << "Loading " << imagename << endl;
-	Mat img = Mat_<float>(imread (imagename));
+	Mat img = Mat_<float>(imread(imagename));
 	if (!img.data) {
 		return EXIT_FAILURE;
 	}
-	morph(img);
+	
+	Mat out(img.rows, img.cols, DataType<float>::type);
+	morph(img, img, out);
+	imshow ("input", Mat_<uchar>(img));
+	imshow ("output", Mat_<uchar>(out));
+	
 	waitKey();
 	return EXIT_SUCCESS;
 }
