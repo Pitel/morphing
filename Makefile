@@ -1,11 +1,14 @@
-CXXFLAGS=-O2 -pipe -pedantic-errors -g -Wall -Wextra -march=native `pkg-config --cflags opencv`
+CXXFLAGS=-O2 -pipe -pedantic-errors -Wall -Wextra -march=native `pkg-config --cflags opencv`
 LDFLAGS=-lcv -lhighgui
 
 .PHONY: clean
 
-all: zadani
+all: morphing
 
-zadani:
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -c $<
+
+morphing: cvmorph.o
 
 clean:
-	$(RM) zadani
+	$(RM) morphing *.o
