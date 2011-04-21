@@ -12,112 +12,63 @@ using namespace cv;
  */
 static const unsigned short N = 8;
 
-/**
- * dopredna 2D DCT
- */
-static void fdct2D (const Mat& src, Mat& dst) {
-	for (unsigned short v = 0; v < N; v++) {
-		for (unsigned short u = 0; u < N; u++) {
-			double g = 0;
-			double au = sqrt(2.0 / N);
-			if (u == 0) au = sqrt(1.0 / N);
-			double av = sqrt(2.0 / N);
-			if (v == 0) av = sqrt(1.0 / N);
-			for (unsigned short y = 0; y < N; y++) {
-				for (unsigned short x = 0; x < N; x++) {
-					g += au * av * src.at<double>(y, x) * cos((M_PI / N) * (x + .5) * u) * cos((M_PI / N) * (y + .5) * v);
-				}
-			dst.at<double>(v, u) = g;
-			}
-		}
-	}
-}
-
-/**
- * zpetna 2D DCT
- */
-static void idct2D (const Mat& src, Mat& dst) {
-	for (unsigned short y = 0; y < N; y++) {
-		for (unsigned short x = 0; x < N; x++) {
-			double f = 0;
-			for (unsigned short v = 0; v < N; v++) {
-				for (unsigned short u = 0; u < N; u++) {
-					double au = sqrt(2.0 / N);
-					if (u == 0) au = sqrt(1.0 / N);
-					double av = sqrt(2.0 / N);
-					if (v == 0) av = sqrt(1.0 / N);
-					f += au * av * src.at<double>(v, u) * cos((M_PI / N) * (x + .5) * u) * cos((M_PI / N) * (y + .5) * v);
-				}
-			dst.at<double>(y, x) = f;
-			}
-		}
-	}
-}
-
-/**
- * kvantizace koeficientu
- */
-static void quantize (const Mat& src, Mat& dst) {
-	const unsigned short Q[N][N] = {
-		{16, 11, 10, 16,  24,  40,  51,  61},
-		{12, 12, 14, 19,  26,  58,  60,  55},
-		{14, 13, 16, 24,  40,  57,  69,  56},
-		{14, 17, 22, 29,  51,  87,  80,  62},
-		{18, 22, 37, 56,  68, 109, 103,  77},
-		{24, 35, 55, 64,  81, 104, 113,  92},
-		{49, 64, 78, 87, 103, 121, 120, 101},
-		{72, 92, 95, 98, 112, 100, 103,  99}};
-	for (unsigned short i = 0; i < N; i++) {
-		for (unsigned short j = 0; j < N; j++) {
-			//dst.at<double>(i, j) = src.at<double>(2, 2);
-			dst.at<double>(i, j) = round(src.at<double>(i, j) / Q[i][j]) * Q[i][j];
-		}
-	}
-}
-
+typedef struct{
+	float x, y;
+} souradnice;
 /**
  * demonstrace komprese obrazu pomoci DCT
  */
-static void demo (const Mat &input)
-{
-	// sem se ulozi koeficienty DCT
-	Mat coeff (input.rows, input.cols, DataType<double>::type);
+static void demo (const Mat &input){
 
-	// sem se ulozi koeficienty po provedeni kvantizace
-	Mat quant (input.rows, input.cols, DataType<double>::type);
-
-	// a tady bude dekodovany obrazek
-	Mat decod (input.rows, input.cols, DataType<double>::type);
-
-	// zpracujeme obraz po blocich
-	for (int y = 0; y < input.rows; y+=N)
-		for (int x = 0; x < input.cols; x+=N)
-		{
-			// aktualni zpracovavany blok bude tento vyrez celeho obrazu
-			Rect rect (x, y, N, N);
-
-			// pomocne promenne, ktere reprezentuji prislusny vyrez
-			Mat inputBlock (input, rect);
-			Mat coeffBlock (coeff, rect);
-			Mat quantBlock (quant, rect);
-			Mat decodBlock (decod, rect);
-
-			// nejprve transformujeme blok obrazku na koeficienty pomoci DCT
-			fdct2D (inputBlock, coeffBlock);
-
-			// pak provedeme kvantizaci techto koeficientu (ztrata informace, komprese)
-			quantize (coeffBlock, quantBlock);
-
-			// z kvantovanych koeficientu zrekonstruujeme puvodni blok obrazu
-			idct2D (quantBlock, decodBlock);
+	int pocet=5;
+	souradnice grid1[6][6];
+	souradnice grid2[6][6];
+	float width = input.size().width;
+	float height = input.size().height;
+	for(int i=0; i<=pocet; i++){
+		for(int j=0; j<=pocet; j++){
+			grid1[i][j].x = (width/((float)pocet))*i;
+			grid1[i][j].y = (height/((float)pocet))*j;
+			grid2[i][j].x = (width/((float)pocet))*i;
+			grid2[i][j].y = (height/((float)pocet))*j;
 		}
+	}
+	grid2[1][1].x = 50;
+	grid2[1][1].y = 50;
 
+	Point2f body[4];
+	body[0] = Point2f(0,0);
+	body[1] = Point2f(500,0);
+	body[2] = Point2f(500,500);
+	body[3] = Point2f(0,500);
+
+	Point2f body2[4];
+	body2[0] = Point2f(100,0);
+	body2[1] = Point2f(400,0);
+	body2[2] = Point2f(200,300);
+	body2[3] = Point2f(0,400);
+
+	Mat trans = getPerspectiveTransform(body, body2);
+	cout << "AAAAAAAAAA" << trans.rows << ", " << trans.cols << endl;
+
+	Mat output(input.rows, input.cols, DataType<float>::type);
+	/*trans.at<float>(0,0) = 0.5;
+	trans.at<float>(1,0) = 0.0;
+	trans.at<float>(2,0) = 0.0;
+	trans.at<float>(0,1) = -0.37;
+	trans.at<float>(1,1) = 0.5;
+	trans.at<float>(2,1) = 297.0;
+	trans.at<float>(0,2) = 0.0;
+	trans.at<float>(1,2) = 0.0;
+	trans.at<float>(2,2) = 1.0;*/
+	warpPerspective(input, output, trans, output.size(), WARP_INVERSE_MAP);
 	// cely postup zobrazit
 	imshow ("input",      Mat_<uchar> (input) );
-	imshow ("transform",  abs (coeff/15) );
-	imshow ("quantized",  abs (quant/15) );
-	imshow ("decoded",    Mat_<uchar> (decod) );
-	imshow ("difference", Mat_<uchar> ( abs (input-decod) ) );
+	imshow ("output",      Mat_<uchar> (output) );
+	//imshow ("transform",  abs (coeff/15) );
+	//imshow ("quantized",  abs (quant/15) );
+	//imshow ("decoded",    Mat_<uchar> (decod) );
+	//imshow ("difference", Mat_<uchar> ( abs (input-decod) ) );
 }
 
 int main (int argc, char **argv)
@@ -127,7 +78,7 @@ int main (int argc, char **argv)
 
 	cout << "Loading " << imagename << endl;
 
-	Mat img = Mat_<double> ( imread (imagename, CV_LOAD_IMAGE_GRAYSCALE) );
+	Mat img = Mat_<float> ( imread (imagename) );
 	if (!img.data)
 		return -1;
 

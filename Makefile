@@ -1,4 +1,4 @@
-CXXFLAGS=-O2 -pipe -pedantic-errors -Wall -Wextra -march=native -fomit-frame-pointer `pkg-config --cflags opencv`
+CXXFLAGS=-O2 -pipe -pedantic-errors -g -Wall -Wextra -march=native `pkg-config --cflags opencv`
 LDFLAGS=-lcv -lhighgui
 
 .PHONY: clean
