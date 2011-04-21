@@ -8,8 +8,8 @@ using namespace cv;
 
 void morph(const Mat &img1, const Mat &img2, Mat &out) {
 	const unsigned short pocet = 5;
-	CvPoint grid1[pocet + 1][pocet + 1];
-	CvPoint grid2[pocet + 1][pocet + 1];
+	Point grid1[pocet + 1][pocet + 1];
+	Point grid2[pocet + 1][pocet + 1];
 	float width = img1.size().width;
 	float height = img1.size().height;
 	for(int i=0; i<=pocet; i++){
@@ -37,5 +37,5 @@ void morph(const Mat &img1, const Mat &img2, Mat &out) {
 	
 	Mat trans = getPerspectiveTransform(body, body2);
 	
-	warpPerspective(img1, out, trans, out.size(), WARP_INVERSE_MAP | QUALITY);
+	warpPerspective(img1, out, trans, out.size(), WARP_INVERSE_MAP | QUALITY, BORDER_TRANSPARENT);
 }
