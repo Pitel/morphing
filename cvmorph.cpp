@@ -6,8 +6,6 @@
 using namespace std;
 using namespace cv;
 
-#define QUALITY INTER_LANCZOS4
-
 typedef struct {
 	float x, y;
 } souradnice;
