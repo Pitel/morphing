@@ -16,12 +16,12 @@ int main(int argc, char *argv[]) {
 	if (!img.data) {
 		return EXIT_FAILURE;
 	}
-	
+
 	Mat out(img.rows, img.cols, DataType<float>::type);
 	morph(img, img, out);
 	imshow ("input", Mat_<uchar>(img));
 	imshow ("output", Mat_<uchar>(out));
-	
+
 	waitKey();
 	return EXIT_SUCCESS;
 }
