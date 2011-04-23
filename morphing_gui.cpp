@@ -1,25 +1,46 @@
-#include <stdlib.h>
+#include <cstdlib>
 #include <gtk/gtk.h>
-
-
+#include <opencv/cv.h>
+#include <opencv/highgui.h>
 GtkWidget *win;
+GtkWidget *scrolled_window = NULL;
 
 
-//IplImage *opencvImage = NULL;
-GtkWidget *image_left = NULL;
-GtkWidget *image_center = NULL;
-GtkWidget *image_right = NULL;
+IplImage *opencvImage = NULL;
+IplImage *opencvImageGTK = NULL; //Tady je kopie obrazku, ktera se pak zobrazuje v GTK
+GtkWidget *image = NULL;
 
+int zoom = 100;
 
 #define RANGE_MIN   0
 #define RANGE_MAX   50
 #define RANGE_STEP  1
 
 
+
+static void ocvImg2gtkImg (IplImage **opencvImage, GtkWidget **img)
+{
+    gtk_image_set_from_pixbuf( GTK_IMAGE(*img), gdk_pixbuf_new_from_data((guchar*) (*opencvImage)->imageData, GDK_COLORSPACE_RGB, FALSE, (*opencvImage)->depth,
+                                                                         (*opencvImage)->width, (*opencvImage)->height, ((*opencvImage)->widthStep), NULL, NULL));
+}
+
+
+static void ocvCopyImg (IplImage **src, IplImage **dest)
+{
+    if((*dest) != NULL)
+        cvReleaseImage(dest);
+
+    (*dest) = cvCreateImage(cvSize( (*src)->width, (*src)->height), (*src)->depth, (*src)->nChannels);
+
+    cvCopy(*src, *dest, NULL);
+}
+
+
+
 static void
 save_file  ()
 {
- /*   GtkWidget *dialog;
+    GtkWidget *dialog;
     dialog = gtk_file_chooser_dialog_new ("Save image as...",
                                           GTK_WINDOW (win),
                                           GTK_FILE_CHOOSER_ACTION_SAVE,
@@ -39,14 +60,7 @@ save_file  ()
 
         g_free (filename);
     }
-    gtk_widget_destroy (dialog);*/
-
-
-    gfloat x,y;
-    gint xp,yp;
-
-    gtk_misc_get_alignment (GTK_MISC(image_left), &x,&y);
-    gtk_misc_get_padding(GTK_MISC(image_left), &xp,&yp);
+    gtk_widget_destroy (dialog);
 
     return;
 
@@ -69,52 +83,141 @@ open_file ()
         filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 
 
+        if (opencvImage != NULL)
+            cvReleaseImage(&opencvImage);
 
-//        if (opencvImage != NULL)
-//            cvReleaseImage(&opencvImage);
-//
-//        opencvImage = cvLoadImage(filename, CV_LOAD_IMAGE_UNCHANGED);
-//
-//        cvCvtColor(opencvImage, opencvImage, CV_BGR2RGB);
-//
-//        ocvCopyImg(&opencvImage, &opencvImagevbox);
-//        ocvCopyImg(&opencvImage, &opencvImageGTK);
-//
-//        ocvImg2gtkImg(&opencvImageGTK, &image);
-//
-//        gtkvbox_loaded = FALSE;
+        opencvImage = cvLoadImage(filename, CV_LOAD_IMAGE_UNCHANGED);
+
+        cvCvtColor(opencvImage, opencvImage, CV_BGR2RGB);
+
+        //ocvCopyImg(&opencvImage, &opencvImagevbox);
+        ocvCopyImg(&opencvImage, &opencvImageGTK);
+
+        ocvImg2gtkImg(&opencvImageGTK, &image);
+
+        //gtkvbox_loaded = FALSE;
+
+
         g_free (filename);
     }
     gtk_widget_destroy (dialog);
 }
 
 
+void zoom_image ()
+{
+    gtk_image_clear(GTK_IMAGE(image));
+
+    if(opencvImageGTK != NULL)
+        cvReleaseImage(&opencvImageGTK);
+
+    opencvImageGTK = cvCreateImage(cvSize((int)((opencvImage->width*(zoom))/100), (int)((opencvImage->height*(zoom))/100) ), opencvImage->depth, opencvImage->nChannels );
+
+    cvResize(opencvImage, opencvImageGTK, CV_INTER_LINEAR);
+
+    ocvImg2gtkImg(&opencvImageGTK, &image);
+
+    //gtktmp_loaded = FALSE;
+}
+
+void zoomout()
+{
+    if(opencvImageGTK != NULL)
+    {
+        if((zoom-10) > 0)
+            zoom -= 10;
+        else
+            zoom = 1;
+
+        zoom_image();
+    }
+}
+
+
+void zoomin()
+{
+    if(opencvImageGTK != NULL)
+    {
+        zoom += 10;
+        zoom_image();
+    }
+}
+
+void zoomnormal()
+{
+
+    if(opencvImageGTK != NULL)
+    {
+        zoom = 100;
+        zoom_image();
+    }
+}
+
+void zoomfit ()
+{
+    if(opencvImageGTK != NULL)
+    {
+
+        gint w = scrolled_window->allocation.width;
+        gint h = scrolled_window->allocation.height;
+        //gtk_widget_get_size_request  (GTK_WIDGET(win), &w, &h);
+
+        if(w <= 0 || h <= 0)
+            return;
+
+        int width, height;
+
+        //if(opencvImage->height > opencvImage->width)
+        if(h < w)
+        {
+            height = h;
+            width = (int)(((float)opencvImage->width/(float)opencvImage->height) * h);
+        }
+        else
+        {
+            width = w;
+            height =  (int)(((float)opencvImage->height/(float)opencvImage->width) * w);
+        }
+
+
+        gtk_image_clear(GTK_IMAGE(image));
+
+        if(opencvImageGTK != NULL)
+            cvReleaseImage(&opencvImageGTK);
+
+        opencvImageGTK = cvCreateImage(cvSize(width, height), opencvImage->depth, opencvImage->nChannels );
+
+        cvResize(opencvImage, opencvImageGTK, CV_INTER_LINEAR);
+
+        ocvImg2gtkImg(&opencvImageGTK, &image);
+
+        //gtktmp_loaded = FALSE;
+    }
+}
+
 
 
 
 int main (int argc, char *argv[])
 {
-    GtkWidget *button = NULL;
+//    GtkWidget *button = NULL;
     GtkWidget *vbox = NULL;
-    GtkWidget *vbox2 = NULL;
+//    GtkWidget *vbox2 = NULL;
     GtkWidget *hbox = NULL;
-    GtkWidget *label = NULL;
+//    GtkWidget *label = NULL;
     GtkWidget *menu1 = NULL;
     GtkWidget *menu = NULL;
     GtkWidget *submenu = NULL;
     GtkWidget *menuitem = NULL;
-    GtkWidget *scrolled_window = NULL;
 
 
     GtkWidget *toolbar = NULL;
-    GtkToolItem *open = NULL;
     GtkToolItem *save = NULL;
     GtkToolItem *zin = NULL;
     GtkToolItem *zout = NULL;
     GtkToolItem *zfit = NULL;
     GtkToolItem *zall = NULL;
     GtkToolItem *sep = NULL;
-    GtkToolItem *refresh = NULL;
 
     /* Initialize GTK+ */
     g_log_set_handler ("Gtk", G_LOG_LEVEL_WARNING, (GLogFunc) gtk_false, NULL);
@@ -230,17 +333,21 @@ int main (int argc, char *argv[])
     zall = gtk_tool_button_new_from_stock(GTK_STOCK_ZOOM_100);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), zall, -1);
 
-    sep = gtk_separator_tool_item_new();
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
-
-    refresh = gtk_tool_button_new_from_stock(GTK_STOCK_REFRESH);
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), refresh, -1);
+//    sep = gtk_separator_tool_item_new();
+//    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
+//
+//    refresh = gtk_tool_button_new_from_stock(GTK_STOCK_REFRESH);
+//    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), refresh, -1);
 
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 0);
 
 
   //  g_signal_connect (G_OBJECT (open), "clicked", G_CALLBACK (open_file), NULL);
   //  g_signal_connect (G_OBJECT (save), "clicked", G_CALLBACK (save_file), NULL);
+    g_signal_connect (G_OBJECT (zin), "clicked", G_CALLBACK (zoomin), NULL);
+    g_signal_connect (G_OBJECT (zout), "clicked", G_CALLBACK (zoomout), NULL);
+    g_signal_connect (G_OBJECT (zall), "clicked", G_CALLBACK (zoomnormal), NULL);
+    g_signal_connect (G_OBJECT (zfit), "clicked", G_CALLBACK (zoomfit), NULL);
 
 
     hbox = gtk_hbox_new (FALSE, 6);
@@ -251,7 +358,7 @@ int main (int argc, char *argv[])
 //    gtk_box_pack_start(GTK_BOX(hbox), vbox2, FALSE, FALSE, 6);
 
 
-    GtkWidget *valign;
+  //  GtkWidget *valign;
 
 //    valign = gtk_alignment_new(0, 1, 1, 0);
 //    label = gtk_label_new ("Tools:");
@@ -268,8 +375,8 @@ int main (int argc, char *argv[])
     gtk_box_pack_start (GTK_BOX (hbox), scrolled_window, TRUE, TRUE, 6);
 
 
-    image_left = gtk_image_new_from_file("Lenna.png");
-  //  image_center = gtk_image_new       ();
+    //image_left = gtk_image_new_from_file("Lenna.png");
+    image = gtk_image_new ();
 
 
     //gtk_box_pack_start (GTK_BOX (vbox), image, TRUE, TRUE, 0);
@@ -284,7 +391,7 @@ int main (int argc, char *argv[])
 //                      G_CALLBACK (img_zoom_click), NULL);
 //
 
-    gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW (scrolled_window), image_left);
+    gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW (scrolled_window), image);
 
 
     GtkWidget *hscale = NULL;
