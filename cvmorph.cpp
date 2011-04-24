@@ -1,5 +1,5 @@
 #include <cstddef>
-#include <iostream>
+//#include <iostream>
 #include <cv.h>
 #include <highgui.h>
 #include "cvmorph.hpp"
@@ -10,7 +10,7 @@ using namespace cv;
 void morph(const Mat &img1, const Mat &img2, Mat &out, const Mat grid1, const Mat grid2, const float ratio) {
 	for (unsigned short y = 0; y < grid1.cols - 1; y++) {
 		for (unsigned short x = 0; x < grid1.rows - 1; x++) {
-			clog << x << ' ' << y << ": " << grid1.at<Point>(x, y).x << ' ' << grid1.at<Point>(x, y).y << endl;
+			//clog << x << ' ' << y << ": " << grid1.at<Point>(x, y).x << ' ' << grid1.at<Point>(x, y).y << endl;
 			Point tile1[4];
 			tile1[0] = grid1.at<Point>(x     , y);
 			tile1[1] = grid1.at<Point>(x + 1 , y);
@@ -24,13 +24,9 @@ void morph(const Mat &img1, const Mat &img2, Mat &out, const Mat grid1, const Ma
 			tile2[2] = grid2.at<Point>(x + 1, y + 1);
 			tile2[3] = grid2.at<Point>(x    , y + 1);
 			Point2f tile2f[4] = {tile2[0], tile2[1], tile2[2], tile2[3]};
-			clog << "Matice ready" << endl;
 			
 			// Perspektivni korekce
-			Mat persp = getPerspectiveTransform(tile1f, tile2f);	//FIXME SIGABRT
-			clog << "Perspektivni matice done" << endl;
-			warpPerspective(img1, out, persp, out.size(), QUALITY);
-			clog << "Perspektiva done" << endl;
+			warpPerspective(img1, out, getPerspectiveTransform(tile1f, tile2f), out.size(), QUALITY);
 			
 			// Maskovani
 			Mat mask(out.size(), out.type());
