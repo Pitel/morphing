@@ -17,18 +17,18 @@ int main(int argc, char *argv[]) {
 	}
 	
 	Mat out(img.size(), img.type());
-	Mat grid1(2, 2, DataType<Point>::type);
-	Mat grid2(2, 2, DataType<Point>::type);
 	
-	grid1.at<Point>(0, 0) = Point(150, 150);
-	grid1.at<Point>(0, 1) = Point(250, 100);
-	grid1.at<Point>(1, 0) = Point(100, 300);
-	grid1.at<Point>(1, 1) = Point(300, 250);
+	const unsigned short gridsize = 4;
+	Mat grid1(gridsize, gridsize, DataType<Point>::type);
 	
-	grid2.at<Point>(0, 0) = Point(100, 100);
-	grid2.at<Point>(0, 1) = Point(300, 100);
-	grid2.at<Point>(1, 0) = Point(100, 300);
-	grid2.at<Point>(1, 1) = Point(300, 300);
+	for (unsigned short y = 0; y < gridsize; y++) {
+		for (unsigned short x = 0; x < gridsize; x++) {
+			grid1.at<Point>(x, y) = Point((img.cols / gridsize) * x, (img.rows / gridsize) * y);
+			//cout << x << ' ' << y << ": " << (img.cols / gridsize) * x << ' ' << (img.rows / gridsize) * y << endl;
+		}
+	}
+	
+	Mat grid2 = grid1.clone();
 	
 	morph(img, img, out, grid1, grid2, 0.5);
 	imshow("input", img);
