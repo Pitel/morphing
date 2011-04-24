@@ -28,15 +28,17 @@ void morph(const Mat &img1, const Mat &img2, Mat &out, const Mat grid1, const Ma
 			Point2f tile2f[4] = {tile2[0], tile2[1], tile2[2], tile2[3]};
 			
 			// Perspektivni korekce
-			warpPerspective(img1, tmp, getPerspectiveTransform(tile1f, tile2f), out.size(), QUALITY);
+			warpPerspective(img1, tmp, getPerspectiveTransform(tile1f, tile2f), out.size());
 			
 			// Maskovani
 			mask = Mat::zeros(mask.size(), mask.type());
 			fillConvexPoly(mask, tile2, 4, CV_RGB(255, 255, 255), CV_AA, 0);
 			out += mask & tmp;
 			
+			/*
 			imshow("debug", tmp);
 			waitKey();
+			*/
 			
 			// Blending
 			//addWeighted(out, 1 - ratio, mask, ratio, 0, out);
