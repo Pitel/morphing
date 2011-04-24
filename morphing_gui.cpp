@@ -1,14 +1,28 @@
+#include <cstddef>
 #include <cstdlib>
 #include <gtk/gtk.h>
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
+
+#include "gui_setgridwnd.hpp"
+
+#include "globals.hpp"
+
 GtkWidget *win;
 GtkWidget *scrolled_window = NULL;
+GtkWidget *label_source = NULL;
+GtkWidget *label_dest = NULL;
+GtkWidget *label_grid = NULL;
 
 
 IplImage *opencvImage = NULL;
 IplImage *opencvImageGTK = NULL; //Tady je kopie obrazku, ktera se pak zobrazuje v GTK
 GtkWidget *image = NULL;
+
+TImgData src_imgdata, dst_imgdata;
+
+
+IplImage *opencvImage_source = NULL;
 
 int zoom = 100;
 
@@ -18,26 +32,7 @@ int zoom = 100;
 
 
 
-static void ocvImg2gtkImg (IplImage **opencvImage, GtkWidget **img)
-{
-    gtk_image_set_from_pixbuf( GTK_IMAGE(*img), gdk_pixbuf_new_from_data((guchar*) (*opencvImage)->imageData, GDK_COLORSPACE_RGB, FALSE, (*opencvImage)->depth,
-                                                                         (*opencvImage)->width, (*opencvImage)->height, ((*opencvImage)->widthStep), NULL, NULL));
-}
-
-
-static void ocvCopyImg (IplImage **src, IplImage **dest)
-{
-    if((*dest) != NULL)
-        cvReleaseImage(dest);
-
-    (*dest) = cvCreateImage(cvSize( (*src)->width, (*src)->height), (*src)->depth, (*src)->nChannels);
-
-    cvCopy(*src, *dest, NULL);
-}
-
-
-
-static void
+void
 save_file  ()
 {
     GtkWidget *dialog;
@@ -67,42 +62,101 @@ save_file  ()
 }
 
 
-static void
-open_file ()
+
+void
+open_file (gpointer, TImgData *img)
 {
     GtkWidget *dialog;
+
+    GtkFileFilter * fimg, * fall;
+
     dialog = gtk_file_chooser_dialog_new ("Open image file...",
                                           GTK_WINDOW (win),
                                           GTK_FILE_CHOOSER_ACTION_OPEN,
                                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                           GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
                                           NULL);
+
+    fimg = gtk_file_filter_new();
+    gtk_file_filter_set_name(fimg,"Images");
+    gtk_file_filter_add_mime_type (fimg, "image/png");
+    gtk_file_filter_add_mime_type (fimg, "image/jpeg");
+    gtk_file_filter_add_mime_type (fimg, "image/gif");
+    gtk_file_filter_add_mime_type (fimg, "image/tiff");
+    gtk_file_filter_add_mime_type (fimg, "image/bmp");
+    gtk_file_filter_add_mime_type (fimg, "image/x-cmu-raster");
+    gtk_file_filter_add_mime_type (fimg, "image/x-portable-bitmap");
+    gtk_file_filter_add_mime_type (fimg, "image/x-portable-graymap");
+    gtk_file_filter_add_mime_type (fimg, "image/x-portable-pixmap");
+    gtk_file_filter_add_mime_type (fimg, "image/x-cmu-raster");
+
+
+    gtk_file_filter_add_pattern(fimg,"*.bmp");
+    gtk_file_filter_add_pattern(fimg,"*.jpg");
+    gtk_file_filter_add_pattern(fimg,"*.jpeg");
+    gtk_file_filter_add_pattern(fimg,"*.jpe");
+    gtk_file_filter_add_pattern(fimg,"*.png");
+    gtk_file_filter_add_pattern(fimg,"*.pbm");
+    gtk_file_filter_add_pattern(fimg,"*.pgm");
+    gtk_file_filter_add_pattern(fimg,"*.ppm");
+    gtk_file_filter_add_pattern(fimg,"*.ras");
+    gtk_file_filter_add_pattern(fimg,"*.tiff");
+    gtk_file_filter_add_pattern(fimg,"*.tif");
+    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog),fimg);
+
+    fall = gtk_file_filter_new();
+    gtk_file_filter_set_name(fall,"All files");
+    gtk_file_filter_add_pattern(fall,"*");
+    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog),fall);
+
+
     if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
     {
         char *filename;
         filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 
 
-        if (opencvImage != NULL)
-            cvReleaseImage(&opencvImage);
+        if (img->ocvImage != NULL)
+            cvReleaseImage(&(img->ocvImage));
 
-        opencvImage = cvLoadImage(filename, CV_LOAD_IMAGE_UNCHANGED);
+        img->ocvImage = cvLoadImage(filename, CV_LOAD_IMAGE_UNCHANGED);
 
-        cvCvtColor(opencvImage, opencvImage, CV_BGR2RGB);
+        cvCvtColor(img->ocvImage, img->ocvImage, CV_BGR2RGB);
 
         //ocvCopyImg(&opencvImage, &opencvImagevbox);
-        ocvCopyImg(&opencvImage, &opencvImageGTK);
+        //ocvCopyImg(&opencvImage, &opencvImageGTK);
 
-        ocvImg2gtkImg(&opencvImageGTK, &image);
+        //ocvImg2gtkImg(&opencvImageGTK, &image);
 
         //gtkvbox_loaded = FALSE;
 
+        if (img->is_source)
+            gtk_label_set_text (GTK_LABEL(label_source), g_path_get_basename(filename));
+        else
+            gtk_label_set_text (GTK_LABEL(label_dest), g_path_get_basename(filename));
 
         g_free (filename);
+
+        //show_girdwnd(dummy, img);
+
+
     }
     gtk_widget_destroy (dialog);
 }
 
+
+void
+setup_grid (gpointer dummy, TImgData *imgdata)
+{
+    if( imgdata->ocvImage == NULL )
+    {
+        open_file(dummy, imgdata);
+        if( imgdata->ocvImage != NULL )
+            show_girdwnd(dummy, imgdata);
+    }
+    else
+        show_girdwnd(dummy, imgdata);
+}
 
 void zoom_image ()
 {
@@ -219,6 +273,9 @@ int main (int argc, char *argv[])
     GtkToolItem *zall = NULL;
     GtkToolItem *sep = NULL;
 
+    src_imgdata.is_source = TRUE;
+    dst_imgdata.is_source = FALSE;
+
     /* Initialize GTK+ */
     g_log_set_handler ("Gtk", G_LOG_LEVEL_WARNING, (GLogFunc) gtk_false, NULL);
     gtk_init (&argc, &argv);
@@ -252,17 +309,17 @@ int main (int argc, char *argv[])
 
     menuitem = gtk_menu_item_new_with_mnemonic ("Load source file");
     gtk_menu_shell_append(GTK_MENU_SHELL(submenu), menuitem);
-    g_signal_connect (GTK_OBJECT (menuitem), "activate", open_file, NULL);
+    g_signal_connect (GTK_OBJECT (menuitem), "activate", (GCallback) open_file, &src_imgdata);
     gtk_widget_show (menuitem);
 
     menuitem = gtk_menu_item_new_with_mnemonic ("Load destination file");
     gtk_menu_shell_append(GTK_MENU_SHELL(submenu), menuitem);
-    g_signal_connect (GTK_OBJECT (menuitem), "activate", save_file, NULL);
+    g_signal_connect (GTK_OBJECT (menuitem), "activate", (GCallback) open_file, &dst_imgdata);
     gtk_widget_show (menuitem);
 
     menuitem = gtk_menu_item_new_with_mnemonic ("Save image as...");
     gtk_menu_shell_append(GTK_MENU_SHELL(submenu), menuitem);
-//    g_signal_connect (GTK_OBJECT (menuitem), "activate", set_default, NULL);
+    g_signal_connect (GTK_OBJECT (menuitem), "activate", save_file, NULL);
     gtk_widget_show (menuitem);
 
     menuitem = gtk_separator_menu_item_new ();
@@ -285,12 +342,12 @@ int main (int argc, char *argv[])
 
     menuitem = gtk_menu_item_new_with_mnemonic ("Set source gird ");
     gtk_menu_shell_append(GTK_MENU_SHELL(submenu), menuitem);
-//    g_signal_connect (GTK_OBJECT (menuitem), "activate", run_options_dialog, NULL);
+    g_signal_connect (GTK_OBJECT (menuitem), "activate",  (GCallback) setup_grid, (gpointer) &src_imgdata);
     gtk_widget_show (menuitem);
 
     menuitem = gtk_menu_item_new_with_mnemonic ("Set destination gird");
     gtk_menu_shell_append(GTK_MENU_SHELL(submenu), menuitem);
-    //g_signal_connect (GTK_OBJECT (menuitem), "activate", run_command_dialog, NULL);
+    g_signal_connect (GTK_OBJECT (menuitem), "activate",  (GCallback) setup_grid, (gpointer) &dst_imgdata);
     gtk_widget_show (menuitem);
 
 
@@ -414,6 +471,55 @@ int main (int argc, char *argv[])
    // gtk_box_pack_start (GTK_BOX (hbox), image_center, FALSE, FALSE, 6);
 
     //gtk_window_set_default_size (GTK_WINDOW (image_center->window), 200,200);
+
+    GtkWidget * hsep = gtk_hseparator_new();
+    gtk_box_pack_start(GTK_BOX(vbox), hsep, FALSE, FALSE, 2);
+
+    GtkWidget * table = gtk_table_new (5, 2, FALSE);
+    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 2);
+
+    GtkWidget * label = gtk_label_new (NULL);
+    gtk_label_set_markup (GTK_LABEL (label), "<span weight=\"bold\"><big>Global informations</big></span>");
+    gtk_table_attach(GTK_TABLE(table), label, 0, 2, 0, 1,  (GtkAttachOptions)(GTK_FILL  | GTK_EXPAND), (GtkAttachOptions)(GTK_FILL | GTK_EXPAND), 6, 2);
+
+
+
+    GtkWidget * halign = gtk_alignment_new(0, 0, 0, 1);
+    label = gtk_label_new ("Source file:");
+    gtk_container_add(GTK_CONTAINER(halign), label);
+    gtk_table_attach(GTK_TABLE(table), halign, 0, 1, 1, 2,  (GtkAttachOptions)(GTK_FILL ),(GtkAttachOptions)( GTK_FILL | GTK_EXPAND), 6, 2);
+
+
+    halign = gtk_alignment_new(0, 0, 0, 1);
+    label_source = gtk_label_new ("-");
+    gtk_container_add(GTK_CONTAINER(halign), label_source);
+    gtk_table_attach(GTK_TABLE(table), halign, 1, 2, 1, 2,  (GtkAttachOptions)(GTK_FILL ),(GtkAttachOptions) (GTK_FILL | GTK_EXPAND), 6, 2);
+
+
+    halign = gtk_alignment_new(0, 0, 0, 1);
+    label = gtk_label_new ("Destination file:");
+    gtk_container_add(GTK_CONTAINER(halign), label);
+    gtk_table_attach(GTK_TABLE(table), halign, 0, 1, 2, 3, (GtkAttachOptions)(GTK_FILL ),(GtkAttachOptions) (GTK_FILL | GTK_EXPAND), 6, 2);
+
+
+    halign = gtk_alignment_new(0, 0, 0, 1);
+    label_dest = gtk_label_new ("-");
+    gtk_container_add(GTK_CONTAINER(halign), label_dest);
+    gtk_table_attach(GTK_TABLE(table), halign, 1, 2, 2, 3,  (GtkAttachOptions)(GTK_FILL ),(GtkAttachOptions) (GTK_FILL | GTK_EXPAND), 6, 2);
+    halign = gtk_alignment_new(0, 0, 0, 1);
+
+
+    label = gtk_label_new ("Grid:");
+    gtk_container_add(GTK_CONTAINER(halign), label);
+    gtk_table_attach(GTK_TABLE(table), halign, 0, 1, 3, 4,  (GtkAttachOptions)(GTK_FILL ),(GtkAttachOptions) (GTK_FILL | GTK_EXPAND), 6, 2);
+
+
+    halign = gtk_alignment_new(0, 0, 0, 1);
+    label_grid = gtk_label_new ("-");
+    gtk_container_add(GTK_CONTAINER(halign), label_grid);
+    gtk_table_attach(GTK_TABLE(table), halign, 1, 2, 3, 4,  (GtkAttachOptions)(GTK_FILL ),(GtkAttachOptions) (GTK_FILL | GTK_EXPAND), 6, 2);
+
+
 
     /* Enter the main loop */
     gtk_widget_show_all (win);
