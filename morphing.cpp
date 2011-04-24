@@ -21,6 +21,7 @@ int main(int argc, char *argv[]) {
 	const unsigned short gridsize = 4;
 	Mat grid1(gridsize, gridsize, DataType<Point>::type);
 	
+	//FIXME Kdyz zamenim <= za <, tak SIGABRT nenastane. Ale je mi fakt divny, proc to failne uz u prvni dlazdice, ktera by mela byt na tech nerovnostech nezavisla. :/
 	for (unsigned short y = 0; y <= gridsize; y++) {
 		for (unsigned short x = 0; x <= gridsize; x++) {
 			grid1.at<Point>(x, y) = Point((img.cols / gridsize) * x, (img.rows / gridsize) * y);

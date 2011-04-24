@@ -27,7 +27,7 @@ void morph(const Mat &img1, const Mat &img2, Mat &out, const Mat grid1, const Ma
 			clog << "Matice ready" << endl;
 			
 			// Perspektivni korekce
-			Mat persp = getPerspectiveTransform(tile1f, tile2f);
+			Mat persp = getPerspectiveTransform(tile1f, tile2f);	//FIXME SIGABRT
 			clog << "Perspektivni matice done" << endl;
 			warpPerspective(img1, out, persp, out.size(), QUALITY);
 			clog << "Perspektiva done" << endl;
