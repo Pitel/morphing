@@ -1,5 +1,5 @@
 #include <cstdlib>
-//#include <iostream>
+#include <iostream>
 
 #include <cv.h>
 #include <highgui.h>
@@ -21,10 +21,10 @@ int main(int argc, char *argv[]) {
 	const unsigned short gridsize = 4;
 	Mat grid1(gridsize, gridsize, DataType<Point>::type);
 	
-	for (unsigned short y = 0; y < gridsize; y++) {
-		for (unsigned short x = 0; x < gridsize; x++) {
+	for (unsigned short y = 0; y <= gridsize; y++) {
+		for (unsigned short x = 0; x <= gridsize; x++) {
 			grid1.at<Point>(x, y) = Point((img.cols / gridsize) * x, (img.rows / gridsize) * y);
-			//cout << x << ' ' << y << ": " << (img.cols / gridsize) * x << ' ' << (img.rows / gridsize) * y << endl;
+			cout << x << ' ' << y << ": " << (img.cols / gridsize) * x << ' ' << (img.rows / gridsize) * y << endl;
 		}
 	}
 	
