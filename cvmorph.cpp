@@ -8,6 +8,8 @@ using namespace std;
 using namespace cv;
 
 void morph(const Mat &img1, const Mat &img2, Mat &out, const Mat grid1, const Mat grid2, const float ratio) {
+	Mat mask(out.size(), out.type());
+	Mat tmp(out.size(), out.type());
 	for (unsigned short y = 0; y < grid1.cols - 1; y++) {
 		for (unsigned short x = 0; x < grid1.rows - 1; x++) {
 			//clog << x << ' ' << y << ": " << grid1.at<Point>(x, y).x << ' ' << grid1.at<Point>(x, y).y << endl;
@@ -26,14 +28,14 @@ void morph(const Mat &img1, const Mat &img2, Mat &out, const Mat grid1, const Ma
 			Point2f tile2f[4] = {tile2[0], tile2[1], tile2[2], tile2[3]};
 			
 			// Perspektivni korekce
-			warpPerspective(img1, out, getPerspectiveTransform(tile1f, tile2f), out.size(), QUALITY);
+			warpPerspective(img1, tmp, getPerspectiveTransform(tile1f, tile2f), out.size(), QUALITY);
 			
 			// Maskovani
-			Mat mask(out.size(), out.type());
-			fillConvexPoly(mask, tile1, 4, CV_RGB(255, 255, 255), CV_AA, 0);
-			out &= mask;
+			mask = Mat::zeros(mask.size(), mask.type());
+			fillConvexPoly(mask, tile2, 4, CV_RGB(255, 255, 255), CV_AA, 0);
+			out += mask & tmp;
 			
-			imshow("debug", out);
+			imshow("debug", tmp);
 			waitKey();
 			
 			// Blending

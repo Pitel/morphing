@@ -29,6 +29,10 @@ int main(int argc, char *argv[]) {
 	}
 	
 	Mat grid2 = grid1.clone();
+	grid2.at<Point>(1, 1).y = img.rows / 2;
+	grid2.at<Point>(2, 1).x = img.cols / 2;
+	grid2.at<Point>(1, 2).x = img.cols / 2;
+	grid2.at<Point>(2, 2).y = img.rows / 2;
 	
 	morph(img, img, out, grid1, grid2, 0.5);
 	imshow("input", img);
