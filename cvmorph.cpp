@@ -11,10 +11,11 @@ Point tween(const Point p1, const Point p2, const float r) {
 	return Point(p1.x - (p1.x - p2.x) * r, p1.y -(p1.y - p2.y) * r);
 }
 
-void morph(const Mat &img1, const Mat &img2, Mat &out, const Mat grid1, const Mat grid2, const float ratio) {
-	out = Mat::zeros(out.size(), out.type());
-	Mat mask(out.size(), out.type());
-	Mat tmp(out.size(), out.type());
+Mat warp(const Mat &img, const Mat grid1, const Mat grid2, const float ratio) {
+	Mat mask(img.size(), img.type());
+	Mat tmp(img.size(), img.type());
+	Mat out(img.size(), img.type());
+	
 	for (unsigned short y = 0; y < grid1.cols - 1; y++) {
 		for (unsigned short x = 0; x < grid1.rows - 1; x++) {
 			//clog << x << ' ' << y << ": " << grid1.at<Point>(x, y).x << ' ' << grid1.at<Point>(x, y).y << endl;
@@ -33,7 +34,7 @@ void morph(const Mat &img1, const Mat &img2, Mat &out, const Mat grid1, const Ma
 			Point2f tile2f[4] = {tile2[0], tile2[1], tile2[2], tile2[3]};
 			
 			// Perspektivni korekce
-			warpPerspective(img1, tmp, getPerspectiveTransform(tile1f, tile2f), tmp.size());
+			warpPerspective(img, tmp, getPerspectiveTransform(tile1f, tile2f), tmp.size());
 			
 			// Maskovani
 			mask = Mat::zeros(mask.size(), mask.type());
@@ -45,9 +46,18 @@ void morph(const Mat &img1, const Mat &img2, Mat &out, const Mat grid1, const Ma
 			imshow("debug", tmp);
 			waitKey();
 			*/
-			
-			// Blending
-			//addWeighted(out, 1 - ratio, mask, ratio, 0, out);
 		}
 	}
+	
+	return out;
+}
+
+void morph(const Mat &img1, const Mat &img2, Mat &out, const Mat grid1, const Mat grid2, const float ratio) {
+	out = Mat::zeros(out.size(), out.type());
+	
+	Mat w1 = warp(img1, grid1, grid2, ratio);
+	Mat w2 = warp(img2, grid2, grid1, 1 - ratio);
+	
+	// Blending
+	addWeighted(w1, 1 - ratio, w2, ratio, 0, out);
 }
