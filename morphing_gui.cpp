@@ -4,8 +4,8 @@
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 
+#include "cvmorph.hpp"
 #include "gui_setgridwnd.hpp"
-
 #include "globals.hpp"
 
 GtkWidget *win;
@@ -15,25 +15,62 @@ GtkWidget *label_dest = NULL;
 GtkWidget *label_grid = NULL;
 
 
+Mat *opencvMatImage = NULL;
 IplImage *opencvImage = NULL;
 IplImage *opencvImageGTK = NULL; //Tady je kopie obrazku, ktera se pak zobrazuje v GTK
 GtkWidget *image = NULL;
 
 TImgData src_imgdata, dst_imgdata;
 
-
-IplImage *opencvImage_source = NULL;
-
 int zoom = 100;
+gboolean bestfit = FALSE;
 
 #define RANGE_MIN   0
-#define RANGE_MAX   50
+#define RANGE_MAX   10
 #define RANGE_STEP  1
+
+static void zoom_image();
+static void zoomfit();
+
+static void
+show_morph_image (float ratio = 0.0)
+{
+    if(!src_imgdata.ocvMatImage || !src_imgdata.ocvMatImage)
+        return;
+
+    morph(*src_imgdata.ocvMatImage, *dst_imgdata.ocvMatImage, *opencvMatImage, *src_imgdata.ocvMatGrid, *dst_imgdata.ocvMatGrid, ratio);
+
+    if(!opencvImage)
+        cvReleaseImage(&opencvImage);
+
+    opencvImage = new IplImage(*opencvMatImage);
+    cvCvtColor(opencvImage, opencvImage, CV_BGR2RGB);
+
+    ocvCopyImg(&opencvImage, &opencvImageGTK);
+
+    if(bestfit)
+        zoomfit();
+    else
+        zoom_image();
+
+    ocvImg2gtkImg(&opencvImageGTK, &image);
+}
+
+
+static void
+change_corrent_step (GtkWidget *range, gpointer)
+{
+
+    float ratio = gtk_range_get_value (GTK_RANGE(range)) / RANGE_MAX;
+
+    show_morph_image(ratio);
+
+}
 
 
 
 void
-save_file  ()
+save_file()
 {
     GtkWidget *dialog;
     dialog = gtk_file_chooser_dialog_new ("Save image as...",
@@ -116,10 +153,13 @@ open_file (gpointer, TImgData *img)
         filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 
 
-        if (img->ocvImage != NULL)
+        if (img->ocvImage)
             cvReleaseImage(&(img->ocvImage));
 
-        img->ocvImage = cvLoadImage(filename, CV_LOAD_IMAGE_UNCHANGED);
+        img->ocvImage = cvLoadImage(filename, CV_LOAD_IMAGE_COLOR);
+        img->ocvMatImage = new Mat(img->ocvImage, TRUE);
+
+        img->ocvMatGrid = get_grid_mat_from_imgdata(img);
 
         cvCvtColor(img->ocvImage, img->ocvImage, CV_BGR2RGB);
 
@@ -130,14 +170,33 @@ open_file (gpointer, TImgData *img)
 
         //gtkvbox_loaded = FALSE;
 
+        const gchar *filetxt = g_strdup_printf("%s [%dx%d]", g_path_get_basename(filename), img->ocvImage->width, img->ocvImage->height);
+
         if (img->is_source)
-            gtk_label_set_text (GTK_LABEL(label_source), g_path_get_basename(filename));
+        {
+            gtk_label_set_text (GTK_LABEL(label_source), filetxt);
+
+            if(!opencvMatImage)
+                opencvMatImage = new Mat(img->ocvMatImage->size(), img->ocvMatImage->type());
+            else
+            {
+                opencvMatImage->release();
+                opencvMatImage = new Mat(img->ocvMatImage->size(), img->ocvMatImage->type());
+            }
+        }
         else
-            gtk_label_set_text (GTK_LABEL(label_dest), g_path_get_basename(filename));
+            gtk_label_set_text (GTK_LABEL(label_dest), filetxt);
+
+
+        gtk_label_set_text (GTK_LABEL(label_grid), g_strdup_printf("%dx%d; %d points", grid_xline, grid_yline, grid_xline*grid_yline));
+
+        imgdata_grid_default(img);
+        img->ocvMatGrid =  get_grid_mat_from_imgdata(img);
+
+        if(dst_imgdata.ocvImage && src_imgdata.ocvImage)
+           show_morph_image(); //ocvImg2gtkImg(&opencvImage, &image);
 
         g_free (filename);
-
-        //show_girdwnd(dummy, img);
 
 
     }
@@ -160,16 +219,20 @@ setup_grid (gpointer dummy, TImgData *imgdata)
 
 void zoom_image ()
 {
-    gtk_image_clear(GTK_IMAGE(image));
+    if (zoom != 100)
+    {
+        gtk_image_clear(GTK_IMAGE(image));
 
-    if(opencvImageGTK != NULL)
-        cvReleaseImage(&opencvImageGTK);
+        if(opencvImageGTK != NULL)
+            cvReleaseImage(&opencvImageGTK);
 
-    opencvImageGTK = cvCreateImage(cvSize((int)((opencvImage->width*(zoom))/100), (int)((opencvImage->height*(zoom))/100) ), opencvImage->depth, opencvImage->nChannels );
+        opencvImageGTK = cvCreateImage(cvSize((int)((opencvImage->width*(zoom))/100), (int)((opencvImage->height*(zoom))/100) ), opencvImage->depth, opencvImage->nChannels );
 
-    cvResize(opencvImage, opencvImageGTK, CV_INTER_LINEAR);
+        cvResize(opencvImage, opencvImageGTK, CV_INTER_LINEAR);
 
-    ocvImg2gtkImg(&opencvImageGTK, &image);
+        ocvImg2gtkImg(&opencvImageGTK, &image);
+
+    }
 
     //gtktmp_loaded = FALSE;
 }
@@ -200,15 +263,20 @@ void zoomin()
 void zoomnormal()
 {
 
+    bestfit = FALSE;
+
     if(opencvImageGTK != NULL)
     {
         zoom = 100;
         zoom_image();
+
     }
 }
 
 void zoomfit ()
 {
+    bestfit = TRUE;
+
     if(opencvImageGTK != NULL)
     {
 
@@ -245,7 +313,6 @@ void zoomfit ()
 
         ocvImg2gtkImg(&opencvImageGTK, &image);
 
-        //gtktmp_loaded = FALSE;
     }
 }
 
@@ -453,6 +520,8 @@ int main (int argc, char *argv[])
 
     GtkWidget *hscale = NULL;
     hscale = gtk_hscale_new_with_range(RANGE_MIN, RANGE_MAX, RANGE_STEP);
+
+    g_signal_connect (G_OBJECT (hscale), "value-changed", G_CALLBACK (change_corrent_step), NULL);
 
 
     hbox = gtk_hbox_new (FALSE, 6);

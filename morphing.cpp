@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
 	for (unsigned short y = 0; y < gridsize; y++) {
 		for (unsigned short x = 0; x < gridsize; x++) {
 			grid1.at<Point>(x, y) = Point((img1.cols / (gridsize - 1)) * x, (img1.rows / (gridsize - 1)) * y);
-			//cout << x << ' ' << y << ": " << (img.cols / (gridsize - 1)) * x << ' ' << (img.rows / (gridsize - 1)) * y << endl;
+			cout << x << ' ' << y << ": " << (img1.cols / (gridsize - 1)) * x << ' ' << (img1.rows / (gridsize - 1)) * y << endl;
 		}
 	}
 	

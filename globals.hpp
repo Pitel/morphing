@@ -2,25 +2,77 @@
 #define GLOBALS_H
 
 #include <cstddef>
-#include <cstdlib>
 #include <gtk/gtk.h>
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 
-typedef struct mp
-{
-    gint x;
-    gint y;
-} myPoint;
+using namespace cv;
+
+#define grid_max 500
+
+
+static gint grid_xline = 4;
+static gint grid_yline = 4;
+
 
 typedef struct imgs
 {
-    IplImage *ocvImage;
-    myPoint grid[100];      //TODO - predelat na allokovani pole nebo z C++
-                            //a taky tady nefungoval point z opencv takze mozna predelat
-    gboolean is_source; // Source || Destination
+    IplImage    *ocvImage;
+    Mat         *ocvMatImage;
+    Mat         *ocvMatGrid;
+    Point grid[grid_max];       //TODO - predelat na allokovani pole nebo z C++
+    gboolean is_source;         // Source || Destination
 
 } TImgData;
+
+
+static Mat *get_grid_mat_from_imgdata (TImgData *idata)
+{
+    Mat *ret = new Mat(grid_xline, grid_yline, DataType<Point>::type);
+
+    for(int y = 0; y < grid_yline; y++)
+        for(int x = 0; x < grid_xline; x++)
+        {
+            int xgrid = idata->grid[x+y*grid_xline].x;
+            int ygrid = idata->grid[x+y*grid_xline].y;
+
+//            //preskoci krajni body
+//            if(xgrid <= 0 || xgrid >= idata->ocvImage->width)
+//                continue;
+//            if(ygrid <= 0 || ygrid >= idata->ocvImage->height)
+//                continue;
+
+            ret->at<Point>(x, y) = idata->grid[x+y*grid_xline];
+		}
+
+	return ret;
+}
+
+//Vynuluje mrizku
+static void imgdata_grid_null (TImgData *idata)
+{
+    for(int i=0; i<grid_max; i++)
+    {
+        idata->grid[i].x = -1;
+        idata->grid[i].y = -1;
+    }
+}
+
+
+static void imgdata_grid_default (TImgData *idata)
+{
+    imgdata_grid_null(idata);
+
+    gint step_h = idata->ocvImage->height / (grid_xline-1);
+    gint step_w = idata->ocvImage->width / (grid_yline-1);
+
+    for(int y=0; y < grid_yline; y++)
+        for(int x=0; x < grid_xline; x++)
+        {
+            idata->grid[x+y*grid_xline].y = (((y*step_h + step_h) > idata->ocvImage->height) ? idata->ocvImage->height : y*step_h) ;
+            idata->grid[x+y*grid_xline].x = (((x*step_w + step_w) > idata->ocvImage->width )? idata->ocvImage->width : x*step_w) ;
+        }
+}
 
 
 
