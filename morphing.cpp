@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <cstddef> 
-//#include <iostream>
+#include <iostream>
+#include <sstream>
 
 #include <cv.h>
 #include <highgui.h>
@@ -35,9 +36,13 @@ int main(int argc, char *argv[]) {
 	grid2.at<Point>(1, 2).x = img.cols / 2;
 	grid2.at<Point>(2, 2).y = img.rows / 2;
 	
-	morph(img, img, out, grid1, grid2, 0.5);
-	imshow("input", img);
-	imshow("output", out);
+	imshow("0", img);
+	for (float ratio = 0.25; ratio <= 1; ratio += 0.25) {
+		morph(img, img, out, grid1, grid2, ratio);
+		stringstream ss (stringstream::in | stringstream::out);
+		ss << ratio;
+		imshow(ss.str(), out);
+	}
 	
 	waitKey();
 	return EXIT_SUCCESS;
