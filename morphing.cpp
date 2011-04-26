@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
 	
 	for (float ratio = 0; ratio <= 1; ratio += 0.25) {
 		morph(img, img, out, grid1, grid2, ratio);
-		stringstream ss (stringstream::in | stringstream::out);
+		stringstream ss;
 		ss << ratio;
 		imshow(ss.str(), out);
 	}
