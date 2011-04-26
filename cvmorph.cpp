@@ -8,7 +8,7 @@ using namespace std;
 using namespace cv;
 
 Point tween(const Point p1, const Point p2, const float r) {
-	return Point(p1.x - (p1.x - p2.x) * r, p1.y -(p1.y - p2.y) * r);
+	return Point(p1.x - (p1.x - p2.x) * r, p1.y - (p1.y - p2.y) * r);
 }
 
 Mat warp(const Mat &img, const Mat grid1, const Mat grid2, const float ratio) {
