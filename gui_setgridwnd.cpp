@@ -8,7 +8,7 @@
 #include "gui_setgridwnd.hpp"
 #include "globals.hpp"
 
-#define TOLERANCE 10
+#define TOLERANCE 15
 
 typedef struct sd
 {
@@ -24,19 +24,18 @@ TSignalData dst_sigdata, src_sigdata;
 void
 add_line_vertical (GtkWidget *widget, TSignalData *sigdata)
 {
-//    int grid_xline = sigdata->idata->grid_size->xline;
-//    int grid_yline = sigdata->idata->grid_size->yline;
-
-
         if((sigdata->idata->grid_size->xline * (sigdata->idata->grid_size->yline + 1)) < GRID_MAX)
             sigdata->idata->grid_size->yline++;
-
-//        imgdata_grid_default(dst_sigdata->idata);
 
         gboolean ret;
         if(src_sigdata.idata != NULL)
         {
             imgdata_grid_default(src_sigdata.idata);
+
+            if(src_sigdata.idata->ocvMatGrid)
+                src_sigdata.idata->ocvMatGrid->release();
+
+             src_sigdata.idata->ocvMatGrid = get_grid_mat_from_imgdata(src_sigdata.idata);
 
             if(src_sigdata.window != NULL)
                 g_signal_emit_by_name(G_OBJECT(src_sigdata.window), "expose-event", sigdata, &ret);
@@ -46,9 +45,13 @@ add_line_vertical (GtkWidget *widget, TSignalData *sigdata)
         {
             imgdata_grid_default(dst_sigdata.idata);
 
+            if(dst_sigdata.idata->ocvMatGrid)
+                dst_sigdata.idata->ocvMatGrid->release();
+
+             dst_sigdata.idata->ocvMatGrid = get_grid_mat_from_imgdata(dst_sigdata.idata);
+
             if(dst_sigdata.window != NULL)
                 g_signal_emit_by_name(G_OBJECT(dst_sigdata.window), "expose-event", sigdata, &ret);
-
         }
 }
 
@@ -58,13 +61,15 @@ add_line_horizontal (GtkWidget *widget, TSignalData *sigdata)
         if((sigdata->idata->grid_size->yline * (sigdata->idata->grid_size->xline + 1)) < GRID_MAX)
             sigdata->idata->grid_size->xline++;
 
-        //imgdata_grid_default(sigdata->idata);
-
-
         gboolean ret;
         if(src_sigdata.idata != NULL)
         {
             imgdata_grid_default(src_sigdata.idata);
+
+            if(src_sigdata.idata->ocvMatGrid)
+                src_sigdata.idata->ocvMatGrid->release();
+
+             src_sigdata.idata->ocvMatGrid = get_grid_mat_from_imgdata(src_sigdata.idata);
 
             if(src_sigdata.window != NULL)
                 g_signal_emit_by_name(G_OBJECT(src_sigdata.window), "expose-event", sigdata, &ret);
@@ -74,9 +79,13 @@ add_line_horizontal (GtkWidget *widget, TSignalData *sigdata)
         {
             imgdata_grid_default(dst_sigdata.idata);
 
+            if(dst_sigdata.idata->ocvMatGrid)
+                dst_sigdata.idata->ocvMatGrid->release();
+
+             dst_sigdata.idata->ocvMatGrid = get_grid_mat_from_imgdata(dst_sigdata.idata);
+
             if(dst_sigdata.window != NULL)
                 g_signal_emit_by_name(G_OBJECT(dst_sigdata.window), "expose-event", sigdata, &ret);
-
         }
 }
 
@@ -87,12 +96,15 @@ remove_line_vertical (GtkWidget *widget, TSignalData *sigdata)
         if((sigdata->idata->grid_size->yline - 1) > 2)
             sigdata->idata->grid_size->yline--;
 
-       // imgdata_grid_default(sigdata->idata);
-
         gboolean ret;
         if(src_sigdata.idata != NULL)
         {
             imgdata_grid_default(src_sigdata.idata);
+
+            if(src_sigdata.idata->ocvMatGrid)
+                src_sigdata.idata->ocvMatGrid->release();
+
+             src_sigdata.idata->ocvMatGrid = get_grid_mat_from_imgdata(src_sigdata.idata);
 
             if(src_sigdata.window != NULL)
                 g_signal_emit_by_name(G_OBJECT(src_sigdata.window), "expose-event", sigdata, &ret);
@@ -102,9 +114,13 @@ remove_line_vertical (GtkWidget *widget, TSignalData *sigdata)
         {
             imgdata_grid_default(dst_sigdata.idata);
 
+            if(dst_sigdata.idata->ocvMatGrid)
+                dst_sigdata.idata->ocvMatGrid->release();
+
+             dst_sigdata.idata->ocvMatGrid = get_grid_mat_from_imgdata(dst_sigdata.idata);
+
             if(dst_sigdata.window != NULL)
                 g_signal_emit_by_name(G_OBJECT(dst_sigdata.window), "expose-event", sigdata, &ret);
-
         }
 }
 
@@ -114,12 +130,15 @@ remove_line_horizontal (GtkWidget *widget, TSignalData *sigdata)
         if((sigdata->idata->grid_size->xline - 1) > 2)
             sigdata->idata->grid_size->xline--;
 
-       // imgdata_grid_default(sigdata->idata);
-
         gboolean ret;
         if(src_sigdata.idata != NULL)
         {
             imgdata_grid_default(src_sigdata.idata);
+
+            if(src_sigdata.idata->ocvMatGrid)
+                src_sigdata.idata->ocvMatGrid->release();
+
+             src_sigdata.idata->ocvMatGrid = get_grid_mat_from_imgdata(src_sigdata.idata);
 
             if(src_sigdata.window != NULL)
                 g_signal_emit_by_name(G_OBJECT(src_sigdata.window), "expose-event", sigdata, &ret);
@@ -129,15 +148,14 @@ remove_line_horizontal (GtkWidget *widget, TSignalData *sigdata)
         {
             imgdata_grid_default(dst_sigdata.idata);
 
+            if(dst_sigdata.idata->ocvMatGrid)
+                dst_sigdata.idata->ocvMatGrid->release();
+
+             dst_sigdata.idata->ocvMatGrid = get_grid_mat_from_imgdata(dst_sigdata.idata);
+
             if(dst_sigdata.window != NULL)
                 g_signal_emit_by_name(G_OBJECT(dst_sigdata.window), "expose-event", sigdata, &ret);
-
         }
-//
-//        gboolean ret;
-//        if(sigdata->window != NULL)
-//            g_signal_emit_by_name(G_OBJECT(sigdata->window), "expose-event", sigdata, &ret);
-
 }
 
 static void
@@ -234,6 +252,8 @@ button_move_callback (GtkWidget      *event_box,
 {
     if(sigdata->drag_point > 0)
     {
+       // if(event->x < 0 || event->x > sigdata->idata->)
+
         sigdata->idata->grid[sigdata->drag_point].x = event->x;
         sigdata->idata->grid[sigdata->drag_point].y = event->y;
 
@@ -269,10 +289,8 @@ expose_callback (GtkWidget      *event_box,
         cairo_paint (cr);
 
         draw_grid(cr, sigdata->idata);
-
     }
 
-   // gdk_pixbuf_unref(pxbf);
 
     return TRUE;
 }
@@ -287,8 +305,6 @@ show_girdwnd  (gpointer, TImgData *imgdata)
     GtkWidget *button;
     GtkWidget *scrolled_window = NULL;
     GtkWidget *image = NULL;
-//    cairo_t *cr;
-
 
     const gchar *title_source = "Setting gird on SOURCE image";
     const gchar *title_dest = "Setting gird on DESTINATION image";
@@ -300,12 +316,12 @@ show_girdwnd  (gpointer, TImgData *imgdata)
     GtkWidget *hbox = NULL;
 
 
-    GtkWidget *toolbar = NULL;
-    GtkToolItem *zin = NULL;
-    GtkToolItem *zout = NULL;
-    GtkToolItem *zfit = NULL;
-    GtkToolItem *zall = NULL;
-    GtkToolItem *sep = NULL;
+//    GtkWidget *toolbar = NULL;
+//    GtkToolItem *zin = NULL;
+//    GtkToolItem *zout = NULL;
+//    GtkToolItem *zfit = NULL;
+//    GtkToolItem *zall = NULL;
+//    GtkToolItem *sep = NULL;
 
 
     /* Create the main window */
@@ -318,7 +334,7 @@ show_girdwnd  (gpointer, TImgData *imgdata)
         gtk_window_set_title (GTK_WINDOW (win), title_dest);
 
     gtk_window_set_position (GTK_WINDOW (win), GTK_WIN_POS_CENTER);
-    gtk_window_set_default_size(GTK_WINDOW(win), 500, 500);
+    gtk_window_set_default_size(GTK_WINDOW(win), 600, 500);
     gtk_widget_realize (win);
     g_signal_connect (win, "destroy", (GCallback) close_wnd, win);
 
@@ -327,29 +343,29 @@ show_girdwnd  (gpointer, TImgData *imgdata)
     gtk_container_add (GTK_CONTAINER (win), vbox);
 
 
-    /* Toolbbar menu */
-    toolbar = gtk_toolbar_new();
-    gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_BOTH);
-
-    gtk_container_set_border_width(GTK_CONTAINER(toolbar), 2);
-
-//    save = gtk_tool_button_new_from_stock(GTK_STOCK_SAVE_AS);
-//    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), save, -1);
-
-    sep = gtk_separator_tool_item_new();
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
-
-    zin = gtk_tool_button_new_from_stock(GTK_STOCK_ZOOM_IN);
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), zin, -1);
-
-    zout = gtk_tool_button_new_from_stock(GTK_STOCK_ZOOM_OUT);
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), zout, -1);
-
-    zfit = gtk_tool_button_new_from_stock(GTK_STOCK_ZOOM_FIT);
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), zfit, -1);
-
-    zall = gtk_tool_button_new_from_stock(GTK_STOCK_ZOOM_100);
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), zall, -1);
+//    /* Toolbbar menu */
+//    toolbar = gtk_toolbar_new();
+//    gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_BOTH);
+//
+//    gtk_container_set_border_width(GTK_CONTAINER(toolbar), 2);
+//
+////    save = gtk_tool_button_new_from_stock(GTK_STOCK_SAVE_AS);
+////    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), save, -1);
+//
+//    sep = gtk_separator_tool_item_new();
+//    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
+//
+//    zin = gtk_tool_button_new_from_stock(GTK_STOCK_ZOOM_IN);
+//    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), zin, -1);
+//
+//    zout = gtk_tool_button_new_from_stock(GTK_STOCK_ZOOM_OUT);
+//    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), zout, -1);
+//
+//    zfit = gtk_tool_button_new_from_stock(GTK_STOCK_ZOOM_FIT);
+//    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), zfit, -1);
+//
+//    zall = gtk_tool_button_new_from_stock(GTK_STOCK_ZOOM_100);
+//    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), zall, -1);
 
 //    sep = gtk_separator_tool_item_new();
 //    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
@@ -357,7 +373,7 @@ show_girdwnd  (gpointer, TImgData *imgdata)
 //    refresh = gtk_tool_button_new_from_stock(GTK_STOCK_REFRESH);
 //    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), refresh, -1);
 
-    gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 0);
+   // gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 0);
 
 
     //  g_signal_connect (G_OBJECT (open), "clicked", G_CALLBACK (open_file), NULL);
@@ -390,7 +406,6 @@ show_girdwnd  (gpointer, TImgData *imgdata)
     gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),
                                     GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 
-    gtk_box_pack_start (GTK_BOX (hbox), scrolled_window, TRUE, TRUE, 6);
 
 
     //image_left = gtk_image_new_from_file("Lenna.png");
@@ -445,6 +460,10 @@ show_girdwnd  (gpointer, TImgData *imgdata)
 
     vbox2 = gtk_vbox_new (FALSE, 6);
     gtk_box_pack_start(GTK_BOX(hbox), vbox2, FALSE, FALSE, 6);
+    gtk_box_pack_start (GTK_BOX (hbox), scrolled_window, TRUE, TRUE, 6);
+
+
+
     GtkWidget *valign;
 
     valign = gtk_alignment_new(0, 1, 0, 1);
@@ -482,25 +501,6 @@ show_girdwnd  (gpointer, TImgData *imgdata)
     g_signal_connect (G_OBJECT (button), "clicked", G_CALLBACK (remove_line_vertical), d);
     gtk_container_add(GTK_CONTAINER(valign), button);
     gtk_box_pack_start(GTK_BOX(vbox2), valign, FALSE, FALSE, 0);
-
-    //gtk_range_set_value  (GTK_RANGE(hscale), RANGE_MAX/2);
-    //gtk_range_set_inverted (GTK_RANGE(vscale), TRUE);
-
-    // g_signal_connect (G_OBJECT (vscale), "value-changed", G_CALLBACK (change_values), &(player.eq[i]));
-
-    // gtk_box_pack_start(GTK_BOX(hbox), hscale, TRUE, TRUE, 6);
-
-    // gtk_misc_set_alignment (GTK_MISC(image_left), 0.0,0.0);
-
-    //gtk_box_pack_start (GTK_BOX (hbox), image_left, FALSE, FALSE, 6);
-    // gtk_box_pack_start (GTK_BOX (hbox), image_center, FALSE, FALSE, 6);
-
-    //gtk_window_set_default_size (GTK_WINDOW (image_center->window), 200,200);
-
-    /* Enter the main loop */
-
-
-
 
     gtk_widget_show_all (win);
 }

@@ -13,26 +13,22 @@ using namespace cv;
 #define GRID_MAX 500
 
 
-//gint grid_xline = 4;
-//gint grid_yline = 4;
-
-
 typedef struct grd
 {
-    int xline;
-    int yline;
+    int xline;  //Pocet car na ose x
+    int yline;  //Pocet car na ose y
 }TGrid;
 
 
 
 typedef struct imgs
 {
-    IplImage    *ocvImage;
-    Mat         *ocvMatImage;
-    Mat         *ocvMatGrid;
+    IplImage    *ocvImage;      //Image ktery se potom prevede na gtk image
+    Mat         *ocvMatImage;   //Matice ktera se nacte pri otevreni a predava se do fce morph
+    Mat         *ocvMatGrid;    //Matice uchovavajici mrizku GRID
     Point grid[GRID_MAX];       //TODO - predelat na allokovani pole nebo z C++
     gboolean is_source;         // Source || Destination
-    TGrid       *grid_size;
+    TGrid       *grid_size;     //Velikos mrizky
 
 } TImgData;
 
@@ -109,8 +105,12 @@ static void imgdata_grid_default (TImgData *idata)
 
 static void ocvImg2gtkImg (IplImage **opencvImage, GtkWidget **img)
 {
-    gtk_image_set_from_pixbuf( GTK_IMAGE(*img), gdk_pixbuf_new_from_data((guchar*) (*opencvImage)->imageData, GDK_COLORSPACE_RGB, FALSE, (*opencvImage)->depth,
-                                                                         (*opencvImage)->width, (*opencvImage)->height, ((*opencvImage)->widthStep), NULL, NULL));
+    IplImage tmp = **opencvImage;
+
+    cvCvtColor(&tmp, &tmp, CV_BGR2RGB);
+
+    gtk_image_set_from_pixbuf( GTK_IMAGE(*img), gdk_pixbuf_new_from_data((guchar*) tmp.imageData, GDK_COLORSPACE_RGB, FALSE, tmp.depth,
+                                                                         tmp.width, tmp.height, (tmp.widthStep), NULL, NULL));
 }
 
 

@@ -46,7 +46,6 @@ show_morph_image (float ratio = 0.0)
         cvReleaseImage(&opencvImage);
 
     opencvImage = new IplImage(*opencvMatImage);
-    cvCvtColor(opencvImage, opencvImage, CV_BGR2RGB);
 
     ocvCopyImg(&opencvImage, &opencvImageGTK);
 
@@ -62,11 +61,14 @@ show_morph_image (float ratio = 0.0)
 static void
 change_corrent_step (GtkWidget *range, gpointer)
 {
+    gtk_label_set_text (GTK_LABEL(label_grid), g_strdup_printf("%dx%d; %d points", grid.xline, grid.yline, grid.xline*grid.yline));
+
+    if(!src_imgdata.ocvImage || !dst_imgdata.ocvImage)
+        return;
 
     float ratio = gtk_range_get_value (GTK_RANGE(range)) / RANGE_MAX;
 
     show_morph_image(ratio);
-
 }
 
 
@@ -90,7 +92,8 @@ save_file()
         char *filename;
         filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 
-//        cvSaveImage(filename, opencvImagevbox, 0);
+
+        cvSaveImage(filename, opencvImage, 0);
 
         g_free (filename);
     }
@@ -159,18 +162,21 @@ open_file (gpointer, TImgData *img)
             cvReleaseImage(&(img->ocvImage));
 
         img->ocvImage = cvLoadImage(filename, CV_LOAD_IMAGE_COLOR);
+
+        if(img->ocvMatImage)
+            img->ocvMatImage->release();
+
         img->ocvMatImage = new Mat(img->ocvImage, TRUE);
 
-        img->ocvMatGrid = get_grid_mat_from_imgdata(img);
 
-        cvCvtColor(img->ocvImage, img->ocvImage, CV_BGR2RGB);
+        imgdata_grid_default(img); //nejdrive spocitat mrizku
 
-        //ocvCopyImg(&opencvImage, &opencvImagevbox);
-        //ocvCopyImg(&opencvImage, &opencvImageGTK);
 
-        //ocvImg2gtkImg(&opencvImageGTK, &image);
+        if(img->ocvMatGrid)
+            img->ocvMatGrid->release();
 
-        //gtkvbox_loaded = FALSE;
+        img->ocvMatGrid = get_grid_mat_from_imgdata(img); //Pak mrizku dat do matice
+
 
         const gchar *filetxt = g_strdup_printf("%s [%dx%d]", g_path_get_basename(filename), img->ocvImage->width, img->ocvImage->height);
 
@@ -192,15 +198,10 @@ open_file (gpointer, TImgData *img)
 
         gtk_label_set_text (GTK_LABEL(label_grid), g_strdup_printf("%dx%d; %d points", grid.xline, grid.yline, grid.xline*grid.yline));
 
-        imgdata_grid_default(img);
-        //img->ocvMatGrid =  get_grid_mat_from_imgdata(img);
-
         if(dst_imgdata.ocvImage && src_imgdata.ocvImage)
            show_morph_image(); //ocvImg2gtkImg(&opencvImage, &image);
 
         g_free (filename);
-
-
     }
     gtk_widget_destroy (dialog);
 }
@@ -235,8 +236,6 @@ void zoom_image ()
         ocvImg2gtkImg(&opencvImageGTK, &image);
 
     }
-
-    //gtktmp_loaded = FALSE;
 }
 
 void zoomout()
@@ -283,14 +282,12 @@ void zoomfit ()
 
         gint w = scrolled_window->allocation.width;
         gint h = scrolled_window->allocation.height;
-        //gtk_widget_get_size_request  (GTK_WIDGET(win), &w, &h);
 
         if(w <= 0 || h <= 0)
             return;
 
         int width, height;
 
-        //if(opencvImage->height > opencvImage->width)
         if(h < w)
         {
             height = h;
@@ -317,7 +314,32 @@ void zoomfit ()
     }
 }
 
+void show_about (gpointer, GtkWidget *win)
+{
+    GtkWidget *dialog;
+    GtkAboutDialog *about;
 
+    const gchar    *auth[] = {  "Bc. Jan Kaláb (xkalab00)",
+                                "Bc. Jan Lipovský (xlipov00)",
+                                "Bc. František Skála (xskala05)",
+                                NULL
+                             };
+
+    dialog = gtk_about_dialog_new();
+    gtk_window_set_transient_for( GTK_WINDOW( dialog ),
+                                  GTK_WINDOW( win ) );
+    about = GTK_ABOUT_DIALOG( dialog );
+
+    gtk_about_dialog_set_program_name( about, "ZPO - morphing, grid warping" );
+    gtk_about_dialog_set_version( about, "0.1.0" );
+    gtk_about_dialog_set_copyright( about, "Copyright 2011 © Jan Kaláb, Jan Lipovský, František Skála" );
+    gtk_about_dialog_set_website( about, "https://github.com/Pitel/morphing" );
+    gtk_about_dialog_set_authors( about, auth );
+
+    gtk_widget_show_all(dialog);
+    gtk_dialog_run(GTK_DIALOG( dialog ));
+    gtk_widget_destroy (dialog);
+}
 
 
 int main (int argc, char *argv[])
@@ -390,6 +412,7 @@ int main (int argc, char *argv[])
 
     menuitem = gtk_menu_item_new_with_mnemonic ("Save image as...");
     gtk_menu_shell_append(GTK_MENU_SHELL(submenu), menuitem);
+    g_signal_connect (GTK_OBJECT (menuitem), "activate", (GCallback) save_file, NULL);
     g_signal_connect (GTK_OBJECT (menuitem), "activate", save_file, NULL);
     gtk_widget_show (menuitem);
 
@@ -432,7 +455,7 @@ int main (int argc, char *argv[])
 
     menuitem = gtk_menu_item_new_with_mnemonic ("_About...");
     gtk_menu_shell_append(GTK_MENU_SHELL(submenu), menuitem);
-   // g_signal_connect (GTK_OBJECT (menuitem), "activate", show_about, NULL);
+    g_signal_connect (GTK_OBJECT (menuitem), "activate", (GCallback) show_about, win);
     gtk_widget_show (menuitem);
 
 
@@ -471,7 +494,7 @@ int main (int argc, char *argv[])
 
 
   //  g_signal_connect (G_OBJECT (open), "clicked", G_CALLBACK (open_file), NULL);
-  //  g_signal_connect (G_OBJECT (save), "clicked", G_CALLBACK (save_file), NULL);
+    g_signal_connect (G_OBJECT (save), "clicked", G_CALLBACK (save_file), NULL);
     g_signal_connect (G_OBJECT (zin), "clicked", G_CALLBACK (zoomin), NULL);
     g_signal_connect (G_OBJECT (zout), "clicked", G_CALLBACK (zoomout), NULL);
     g_signal_connect (G_OBJECT (zall), "clicked", G_CALLBACK (zoomnormal), NULL);
