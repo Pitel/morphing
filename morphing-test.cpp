@@ -1,6 +1,6 @@
 #include <cstdlib>
 #include <cstddef> 
-#include <iostream>
+//#include <iostream>
 #include <sstream>
 
 #include <cv.h>
@@ -12,8 +12,8 @@ using namespace std;
 using namespace cv;
 
 int main(int argc, char *argv[]) {
-	const char *imagename1 = argc > 1 ? argv[1] : "Lenna.png";
-	const char *imagename2 = argc > 2 ? argv[2] : "Lenna.png";
+	const char *imagename1 = argc > 1 ? argv[1] : "lenna.jpg";
+	const char *imagename2 = argc > 2 ? argv[2] : "bush.jpg";
 	Mat img1 = imread(imagename1);
 	Mat img2 = imread(imagename2);
 	if (!img1.data || !img2.data) {
@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
 	for (unsigned short y = 0; y < gridsize; y++) {
 		for (unsigned short x = 0; x < gridsize; x++) {
 			grid1.at<Point>(x, y) = Point((img1.cols / (gridsize - 1)) * x, (img1.rows / (gridsize - 1)) * y);
-			cout << x << ' ' << y << ": " << (img1.cols / (gridsize - 1)) * x << ' ' << (img1.rows / (gridsize - 1)) * y << endl;
+			//cout << x << ' ' << y << ": " << (img1.cols / (gridsize - 1)) * x << ' ' << (img1.rows / (gridsize - 1)) * y << endl;
 		}
 	}
 	
