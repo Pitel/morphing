@@ -128,13 +128,15 @@ expose_callback (GtkWidget      *event_box,
 
     cairo_t *cr = gdk_cairo_create (GDK_DRAWABLE (event_box->window));
 
-    const GdkPixbuf *pxbf = gtk_image_get_pixbuf(GTK_IMAGE(sigdata->image));
+    GdkPixbuf *pxbf = gtk_image_get_pixbuf(GTK_IMAGE(sigdata->image));
 
     gdk_cairo_set_source_pixbuf (cr, pxbf, 0,0);
 
     cairo_paint (cr);
 
     draw_grid(cr, sigdata->idata);
+
+    //free pxbf TODO
 
     return TRUE;
 }
