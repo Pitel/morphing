@@ -13,8 +13,16 @@ using namespace cv;
 #define GRID_MAX 500
 
 
-static gint grid_xline = 4;
-static gint grid_yline = 4;
+//gint grid_xline = 4;
+//gint grid_yline = 4;
+
+
+typedef struct grd
+{
+    int xline;
+    int yline;
+}TGrid;
+
 
 
 typedef struct imgs
@@ -24,16 +32,17 @@ typedef struct imgs
     Mat         *ocvMatGrid;
     Point grid[GRID_MAX];       //TODO - predelat na allokovani pole nebo z C++
     gboolean is_source;         // Source || Destination
+    TGrid       *grid_size;
 
 } TImgData;
 
 
 static Mat *get_grid_mat_from_imgdata (TImgData *idata)
 {
-    Mat *ret = new Mat(grid_xline, grid_yline, DataType<Point>::type);
+    Mat *ret = new Mat(idata->grid_size->xline, idata->grid_size->yline, DataType<Point>::type);
 
-    for(int y = 0; y < grid_yline; y++)
-        for(int x = 0; x < grid_xline; x++)
+    for(int y = 0; y < idata->grid_size->yline; y++)
+        for(int x = 0; x < idata->grid_size->xline; x++)
         {
 //            int xgrid = idata->grid[x+y*grid_xline].x;
 //            int ygrid = idata->grid[x+y*grid_xline].y;
@@ -44,7 +53,7 @@ static Mat *get_grid_mat_from_imgdata (TImgData *idata)
 //            if(ygrid <= 0 || ygrid >= idata->ocvImage->height)
 //                continue;
 
-            ret->at<Point>(x, y) = idata->grid[x+y*grid_xline];
+            ret->at<Point>(x, y) = idata->grid[x+y*idata->grid_size->xline];
 		}
 
 	return ret;
@@ -65,31 +74,31 @@ static void imgdata_grid_default (TImgData *idata)
 {
     imgdata_grid_null(idata);
 
-    const unsigned int step_x = idata->ocvImage->width / (grid_xline - 1);
-    const unsigned int step_y = idata->ocvImage->height  / (grid_yline - 1);
+    const unsigned int step_x = idata->ocvImage->width / (idata->grid_size->xline - 1);
+    const unsigned int step_y = idata->ocvImage->height  / (idata->grid_size->yline - 1);
 
     //float x = ((float) idata->ocvImage->height) / ((float) (grid_xline-1));
    // float y = ((float) idata->ocvImage->width) / ((float) (grid_yline-1));
 
     //std::cout << "[" << grid_xline << "," << grid_yline << "]\t" << x << " " << y << " ------- " << step_x << " " << step_y << std::endl;
-    for(int y=0; y < grid_yline; y++)
-        for(int x=0; x < grid_xline; x++)
+    for(int y=0; y < idata->grid_size->yline; y++)
+        for(int x=0; x < idata->grid_size->xline; x++)
         {
           //  gint a = x*step_y;
           //  gint b = y*step_x;
           if (x <= 0) {
-          	idata->grid[x+y*grid_xline].x = 0;
-          } else if (x >= grid_xline - 1) {
-          	idata->grid[x+y*grid_xline].x = idata->ocvImage->width;
+          	idata->grid[x+y*idata->grid_size->xline].x = 0;
+          } else if (x >= idata->grid_size->xline - 1) {
+          	idata->grid[x+y*idata->grid_size->xline].x = idata->ocvImage->width;
           } else {
-            idata->grid[x+y*grid_xline].x = x * step_x;
+            idata->grid[x+y*idata->grid_size->xline].x = x * step_x;
           }
           if (y <= 0) {
-          	idata->grid[x+y*grid_xline].y = 0;
-          } else if (y >= grid_yline - 1) {
-          	idata->grid[x+y*grid_xline].y = idata->ocvImage->height;
+          	idata->grid[x+y*idata->grid_size->xline].y = 0;
+          } else if (y >= idata->grid_size->yline - 1) {
+          	idata->grid[x+y*idata->grid_size->xline].y = idata->ocvImage->height;
           } else {
-            idata->grid[x+y*grid_xline].y = y * step_y;
+            idata->grid[x+y*idata->grid_size->xline].y = y * step_y;
           }
 
             //std::cout << a << "," << b << " - [" << idata->grid[x+y*grid_xline].x << "," << idata->grid[x+y*grid_xline].y << "] " << endl;

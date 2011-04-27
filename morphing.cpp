@@ -20,6 +20,8 @@ IplImage *opencvImage = NULL;
 IplImage *opencvImageGTK = NULL; //Tady je kopie obrazku, ktera se pak zobrazuje v GTK
 GtkWidget *image = NULL;
 
+TGrid grid = {4,4};
+
 TImgData src_imgdata, dst_imgdata;
 
 int zoom = 100;
@@ -188,10 +190,10 @@ open_file (gpointer, TImgData *img)
             gtk_label_set_text (GTK_LABEL(label_dest), filetxt);
 
 
-        gtk_label_set_text (GTK_LABEL(label_grid), g_strdup_printf("%dx%d; %d points", grid_xline, grid_yline, grid_xline*grid_yline));
+        gtk_label_set_text (GTK_LABEL(label_grid), g_strdup_printf("%dx%d; %d points", grid.xline, grid.yline, grid.xline*grid.yline));
 
         imgdata_grid_default(img);
-        img->ocvMatGrid =  get_grid_mat_from_imgdata(img);
+        //img->ocvMatGrid =  get_grid_mat_from_imgdata(img);
 
         if(dst_imgdata.ocvImage && src_imgdata.ocvImage)
            show_morph_image(); //ocvImg2gtkImg(&opencvImage, &image);
@@ -341,6 +343,9 @@ int main (int argc, char *argv[])
 
     src_imgdata.is_source = TRUE;
     dst_imgdata.is_source = FALSE;
+
+    src_imgdata.grid_size = &grid;
+    dst_imgdata.grid_size = &grid;
 
     /* Initialize GTK+ */
     g_log_set_handler ("Gtk", G_LOG_LEVEL_WARNING, (GLogFunc) gtk_false, NULL);

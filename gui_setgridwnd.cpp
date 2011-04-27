@@ -24,55 +24,119 @@ TSignalData dst_sigdata, src_sigdata;
 void
 add_line_vertical (GtkWidget *widget, TSignalData *sigdata)
 {
-        if((grid_xline * (grid_yline + 1)) < GRID_MAX)
-            grid_yline++;
+//    int grid_xline = sigdata->idata->grid_size->xline;
+//    int grid_yline = sigdata->idata->grid_size->yline;
 
-        imgdata_grid_default(sigdata->idata);
 
+        if((sigdata->idata->grid_size->xline * (sigdata->idata->grid_size->yline + 1)) < GRID_MAX)
+            sigdata->idata->grid_size->yline++;
+
+//        imgdata_grid_default(dst_sigdata->idata);
 
         gboolean ret;
-        if(sigdata->window != NULL)
-            g_signal_emit_by_name(G_OBJECT(sigdata->window), "expose-event", sigdata, &ret);
+        if(src_sigdata.idata != NULL)
+        {
+            imgdata_grid_default(src_sigdata.idata);
+
+            if(src_sigdata.window != NULL)
+                g_signal_emit_by_name(G_OBJECT(src_sigdata.window), "expose-event", sigdata, &ret);
+        }
+
+        if(dst_sigdata.idata != NULL)
+        {
+            imgdata_grid_default(dst_sigdata.idata);
+
+            if(dst_sigdata.window != NULL)
+                g_signal_emit_by_name(G_OBJECT(dst_sigdata.window), "expose-event", sigdata, &ret);
+
+        }
 }
 
 void
 add_line_horizontal (GtkWidget *widget, TSignalData *sigdata)
 {
-        if((grid_yline * (grid_xline + 1)) < GRID_MAX)
-            grid_xline++;
+        if((sigdata->idata->grid_size->yline * (sigdata->idata->grid_size->xline + 1)) < GRID_MAX)
+            sigdata->idata->grid_size->xline++;
 
-        imgdata_grid_default(sigdata->idata);
+        //imgdata_grid_default(sigdata->idata);
+
 
         gboolean ret;
-        if(sigdata->window != NULL)
-            g_signal_emit_by_name(G_OBJECT(sigdata->window), "expose-event", sigdata, &ret);
+        if(src_sigdata.idata != NULL)
+        {
+            imgdata_grid_default(src_sigdata.idata);
+
+            if(src_sigdata.window != NULL)
+                g_signal_emit_by_name(G_OBJECT(src_sigdata.window), "expose-event", sigdata, &ret);
+        }
+
+        if(dst_sigdata.idata != NULL)
+        {
+            imgdata_grid_default(dst_sigdata.idata);
+
+            if(dst_sigdata.window != NULL)
+                g_signal_emit_by_name(G_OBJECT(dst_sigdata.window), "expose-event", sigdata, &ret);
+
+        }
 }
 
 
 void
 remove_line_vertical (GtkWidget *widget, TSignalData *sigdata)
 {
-        if((grid_yline - 1) > 2)
-            grid_yline--;
+        if((sigdata->idata->grid_size->yline - 1) > 2)
+            sigdata->idata->grid_size->yline--;
 
-        imgdata_grid_default(sigdata->idata);
+       // imgdata_grid_default(sigdata->idata);
 
         gboolean ret;
-        if(sigdata->window != NULL)
-            g_signal_emit_by_name(G_OBJECT(sigdata->window), "expose-event", sigdata, &ret);
+        if(src_sigdata.idata != NULL)
+        {
+            imgdata_grid_default(src_sigdata.idata);
+
+            if(src_sigdata.window != NULL)
+                g_signal_emit_by_name(G_OBJECT(src_sigdata.window), "expose-event", sigdata, &ret);
+        }
+
+        if(dst_sigdata.idata != NULL)
+        {
+            imgdata_grid_default(dst_sigdata.idata);
+
+            if(dst_sigdata.window != NULL)
+                g_signal_emit_by_name(G_OBJECT(dst_sigdata.window), "expose-event", sigdata, &ret);
+
+        }
 }
 
 void
 remove_line_horizontal (GtkWidget *widget, TSignalData *sigdata)
 {
-        if((grid_xline - 1) > 2)
-            grid_xline--;
+        if((sigdata->idata->grid_size->xline - 1) > 2)
+            sigdata->idata->grid_size->xline--;
 
-        imgdata_grid_default(sigdata->idata);
+       // imgdata_grid_default(sigdata->idata);
 
         gboolean ret;
-        if(sigdata->window != NULL)
-            g_signal_emit_by_name(G_OBJECT(sigdata->window), "expose-event", sigdata, &ret);
+        if(src_sigdata.idata != NULL)
+        {
+            imgdata_grid_default(src_sigdata.idata);
+
+            if(src_sigdata.window != NULL)
+                g_signal_emit_by_name(G_OBJECT(src_sigdata.window), "expose-event", sigdata, &ret);
+        }
+
+        if(dst_sigdata.idata != NULL)
+        {
+            imgdata_grid_default(dst_sigdata.idata);
+
+            if(dst_sigdata.window != NULL)
+                g_signal_emit_by_name(G_OBJECT(dst_sigdata.window), "expose-event", sigdata, &ret);
+
+        }
+//
+//        gboolean ret;
+//        if(sigdata->window != NULL)
+//            g_signal_emit_by_name(G_OBJECT(sigdata->window), "expose-event", sigdata, &ret);
 
 }
 
@@ -89,30 +153,30 @@ void draw_grid (cairo_t *cr, TImgData *imgdata)
 {
     cairo_set_source_rgb (cr, 0, 0, 0);
 
-    for(int y = 0; y < grid_yline; y++)
-        for(int x = 0; x < grid_xline; x++)
+    for(int y = 0; y < imgdata->grid_size->yline; y++)
+        for(int x = 0; x < imgdata->grid_size->xline; x++)
         {
-            int xx = x+1 < grid_xline ? x+1 : x;
-            int yy = y+1 < grid_yline ? y+1 : y;
+            int xx = x+1 < imgdata->grid_size->xline ? x+1 : x;
+            int yy = y+1 < imgdata->grid_size->yline ? y+1 : y;
 
 
-            if (imgdata->grid[xx+y*grid_xline].y != imgdata->ocvImage->height &&
-                    imgdata->grid[xx+y*grid_xline].y != 0 &&
-                    imgdata->grid[x+y*grid_xline].y != imgdata->ocvImage->height &&
-                    imgdata->grid[x+y*grid_xline].y > 0)
+            if (imgdata->grid[xx+y* imgdata->grid_size->xline].y != imgdata->ocvImage->height &&
+                    imgdata->grid[xx+y* imgdata->grid_size->xline].y != 0 &&
+                    imgdata->grid[x+y* imgdata->grid_size->xline].y != imgdata->ocvImage->height &&
+                    imgdata->grid[x+y* imgdata->grid_size->xline].y > 0)
             {
-                cairo_move_to (cr, imgdata->grid[x+y*grid_xline].x, imgdata->grid[x+y*grid_xline].y);
-                cairo_line_to (cr, imgdata->grid[xx+y*grid_xline].x, imgdata->grid[xx+y*grid_xline].y);
+                cairo_move_to (cr, imgdata->grid[x+y* imgdata->grid_size->xline].x, imgdata->grid[x+y* imgdata->grid_size->xline].y);
+                cairo_line_to (cr, imgdata->grid[xx+y* imgdata->grid_size->xline].x, imgdata->grid[xx+y* imgdata->grid_size->xline].y);
             }
 
 
-            if (imgdata->grid[x+yy*grid_xline].x != imgdata->ocvImage->width &&
-                    imgdata->grid[x+yy*grid_xline].x != 0 &&
-                    imgdata->grid[x+y*grid_xline].x != imgdata->ocvImage->width &&
-                    imgdata->grid[x+y*grid_xline].x > 0)
+            if (imgdata->grid[x+yy* imgdata->grid_size->xline].x != imgdata->ocvImage->width &&
+                    imgdata->grid[x+yy* imgdata->grid_size->xline].x != 0 &&
+                    imgdata->grid[x+y* imgdata->grid_size->xline].x != imgdata->ocvImage->width &&
+                    imgdata->grid[x+y* imgdata->grid_size->xline].x > 0)
             {
-                cairo_move_to (cr, imgdata->grid[x+y*grid_xline].x, imgdata->grid[x+y*grid_xline].y);
-                cairo_line_to (cr, imgdata->grid[x+yy*grid_xline].x, imgdata->grid[x+yy*grid_xline].y);
+                cairo_move_to (cr, imgdata->grid[x+y* imgdata->grid_size->xline].x, imgdata->grid[x+y* imgdata->grid_size->xline].y);
+                cairo_line_to (cr, imgdata->grid[x+yy* imgdata->grid_size->xline].x, imgdata->grid[x+yy* imgdata->grid_size->xline].y);
             }
 
         }
@@ -137,15 +201,15 @@ button_press_callback (GtkWidget       *event_box,
                        GdkEventButton  *event,
                        TSignalData     *sigdata)
 {
-    printf("%f, %f\n",event->x, event->y);
+  //  printf("%f, %f\n",event->x, event->y);
 
     sigdata->drag_point = -1;
 
-    for(int y = 0; y < grid_yline; y++)
-        for(int x = 0; x < grid_xline; x++)
+    for(int y = 0; y < sigdata->idata->grid_size->yline; y++)
+        for(int x = 0; x < sigdata->idata->grid_size->xline; x++)
         {
-            int xgrid = sigdata->idata->grid[x+y*grid_xline].x;
-            int ygrid = sigdata->idata->grid[x+y*grid_xline].y;
+            int xgrid = sigdata->idata->grid[x+y*sigdata->idata->grid_size->xline].x;
+            int ygrid = sigdata->idata->grid[x+y*sigdata->idata->grid_size->xline].y;
 
             //preskoci krajni body
             if(xgrid <= 0 || xgrid >= sigdata->idata->ocvImage->width)
@@ -156,7 +220,7 @@ button_press_callback (GtkWidget       *event_box,
             if ((event->x > xgrid - TOLERANCE) && (event->x < xgrid + TOLERANCE))
             {
                 if ((event->y > ygrid - TOLERANCE) && (event->y < ygrid + TOLERANCE))
-                    sigdata->drag_point = x+y*grid_xline;
+                    sigdata->drag_point = x+y*sigdata->idata->grid_size->xline;
             }
         }
 
