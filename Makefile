@@ -1,7 +1,7 @@
 CXXFLAGS=-O2 -pipe -pedantic -Wall -Wextra -march=native `pkg-config --cflags opencv gtk+-2.0 cairo`
 LDFLAGS=`pkg-config --libs opencv gtk+-2.0 cairo`
 
-.PHONY: clean
+.PHONY: clean doc
 
 all: morphing
 
@@ -14,3 +14,6 @@ morphing-test: cvmorph.o
 
 clean:
 	$(RM) morphing-test morphing *.o
+
+doc:
+	echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Morphing</title></head><body>' > README.html && perl Markdown/Markdown.pl README.md >> README.html && echo '</body></html>' >> README.html
