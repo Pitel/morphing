@@ -1,5 +1,5 @@
 #include <cstddef>
-//#include <iostream>
+#include <iostream>
 #include <cv.h>
 //#include <highgui.h>
 #include "cvmorph.hpp"
@@ -53,6 +53,23 @@ Mat warp(const Mat &img, const Mat grid1, const Mat grid2, const float ratio) {
 }
 
 void morph(const Mat &img1, const Mat &img2, Mat &out, const Mat grid1, const Mat grid2, const float ratio) {
+	if (!img1.data) {
+		cerr << "img1!" << endl;
+		return;
+	} else if (!img2.data) {
+		cerr << "img2!" << endl;
+		return;
+	} else if (!out.data) {
+		cerr << "out!" << endl;
+		return;
+	} else if (!grid1.data) {
+		cerr << "grid1!" << endl;
+		return;
+	} else if (!grid2.data) {
+		cerr << "grid2!" << endl;
+		return;
+	}
+	
 	out = Mat::zeros(out.size(), out.type());
 	
 	Mat w1 = warp(img1, grid1, grid2, ratio);
