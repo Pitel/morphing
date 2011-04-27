@@ -1,7 +1,7 @@
 #include <cstddef>
 //#include <iostream>
 #include <cv.h>
-#include <highgui.h>
+//#include <highgui.h>
 #include "cvmorph.hpp"
 
 using namespace std;
