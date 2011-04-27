@@ -39,7 +39,7 @@ Mat warp(const Mat &img, const Mat grid1, const Mat grid2, const float ratio) {
 			// Maskovani
 			mask = Mat::zeros(mask.size(), mask.type());
 			fillConvexPoly(mask, tile2, 4, CV_RGB(255, 255, 255), CV_AA, 0);
-			out += mask & tmp;
+			out = max(mask & tmp, out);
 			
 			/*
 			addWeighted(tmp, 1, mask, 0.5, 0, tmp);
