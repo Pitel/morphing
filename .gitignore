@@ -1,6 +1,7 @@
-*.o
+*.[ao]
 morphing
 morphing-test
 *.png
 *.jp[e]g
-README.html
+*.htm[l]
+*.zip
