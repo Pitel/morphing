@@ -2,6 +2,9 @@
 morphing
 morphing-test
 *.png
-*.jp[e]g
+*.jpeg
+*.jpg
 *.htm[l]
 *.zip
+!bush.*
+!lenna.*
