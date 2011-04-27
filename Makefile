@@ -8,9 +8,9 @@ all: morphing
 #%.o: %.cpp
 #	$(CXX) $(CXXFLAGS) $(LDFLAGS) -c $<
 
-morphing: cvmorph.o
+morphing: gui_setgridwnd.o cvmorph.o
 
-morphing_gui: gui_setgridwnd.o cvmorph.o
+morphing-test: cvmorph.o
 
 clean:
-	$(RM) morphing morphing_gui *.o
+	$(RM) morphing-test morphing *.o

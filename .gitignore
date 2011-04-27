@@ -1,4 +1,5 @@
 *.o
 morphing
+morphing-test
 *.png
 *.jpg
