@@ -14,15 +14,74 @@ typedef struct sd
 {
     TImgData *idata;
     GtkWidget *image;
-    cairo_t *cr;
-    int drag_point;
+    gint drag_point;
+    GtkWidget *window;
 } TSignalData;
 
-TSignalData d;
+TSignalData dst_sigdata, src_sigdata;
+
+
+void
+add_line_vertical (GtkWidget *widget, TSignalData *sigdata)
+{
+        if((grid_xline * (grid_yline + 1)) < GRID_MAX)
+            grid_yline++;
+
+        imgdata_grid_default(sigdata->idata);
+
+
+        gboolean ret;
+        if(sigdata->window != NULL)
+            g_signal_emit_by_name(G_OBJECT(sigdata->window), "expose-event", sigdata, &ret);
+}
+
+void
+add_line_horizontal (GtkWidget *widget, TSignalData *sigdata)
+{
+        if((grid_yline * (grid_xline + 1)) < GRID_MAX)
+            grid_xline++;
+
+        imgdata_grid_default(sigdata->idata);
+
+        gboolean ret;
+        if(sigdata->window != NULL)
+            g_signal_emit_by_name(G_OBJECT(sigdata->window), "expose-event", sigdata, &ret);
+}
+
+
+void
+remove_line_vertical (GtkWidget *widget, TSignalData *sigdata)
+{
+        if((grid_yline - 1) > 2)
+            grid_yline--;
+
+        imgdata_grid_default(sigdata->idata);
+
+        gboolean ret;
+        if(sigdata->window != NULL)
+            g_signal_emit_by_name(G_OBJECT(sigdata->window), "expose-event", sigdata, &ret);
+}
+
+void
+remove_line_horizontal (GtkWidget *widget, TSignalData *sigdata)
+{
+        if((grid_xline - 1) > 2)
+            grid_xline--;
+
+        imgdata_grid_default(sigdata->idata);
+
+        gboolean ret;
+        if(sigdata->window != NULL)
+            g_signal_emit_by_name(G_OBJECT(sigdata->window), "expose-event", sigdata, &ret);
+
+}
 
 static void
 close_wnd (GtkWidget *win)
 {
+    dst_sigdata.window = NULL;
+    src_sigdata.window = NULL;
+
     gtk_widget_destroy(win);
 }
 
@@ -78,6 +137,8 @@ button_press_callback (GtkWidget       *event_box,
                        GdkEventButton  *event,
                        TSignalData     *sigdata)
 {
+    printf("%f, %f\n",event->x, event->y);
+
     sigdata->drag_point = -1;
 
     for(int y = 0; y < grid_yline; y++)
@@ -125,18 +186,29 @@ expose_callback (GtkWidget      *event_box,
                  GdkEventButton *event,
                  TSignalData    *sigdata)
 {
+    cairo_t *cr;
+    if (sigdata->window != NULL)
+        cr = gdk_cairo_create (GDK_DRAWABLE (sigdata->window->window));
+    else
+    {
+        cr = gdk_cairo_create (GDK_DRAWABLE (event_box->window));
+        sigdata->window = event_box;
+    }
 
-    cairo_t *cr = gdk_cairo_create (GDK_DRAWABLE (event_box->window));
 
-    GdkPixbuf *pxbf = gtk_image_get_pixbuf(GTK_IMAGE(sigdata->image));
+    if (sigdata->image != NULL)
+    {
+        GdkPixbuf *pxbf = gtk_image_get_pixbuf(GTK_IMAGE(sigdata->image));
 
-    gdk_cairo_set_source_pixbuf (cr, pxbf, 0,0);
+        gdk_cairo_set_source_pixbuf (cr, pxbf, 0,0);
 
-    cairo_paint (cr);
+        cairo_paint (cr);
 
-    draw_grid(cr, sigdata->idata);
+        draw_grid(cr, sigdata->idata);
 
-    //free pxbf TODO
+    }
+
+   // gdk_pixbuf_unref(pxbf);
 
     return TRUE;
 }
@@ -148,9 +220,10 @@ void
 show_girdwnd  (gpointer, TImgData *imgdata)
 {
     GtkWidget *win;
+    GtkWidget *button;
     GtkWidget *scrolled_window = NULL;
     GtkWidget *image = NULL;
-    cairo_t *cr;
+//    cairo_t *cr;
 
 
     const gchar *title_source = "Setting gird on SOURCE image";
@@ -158,6 +231,8 @@ show_girdwnd  (gpointer, TImgData *imgdata)
 
 
     GtkWidget *vbox = NULL;
+    GtkWidget *vbox2 = NULL;
+    GtkWidget *label = NULL;
     GtkWidget *hbox = NULL;
 
 
@@ -264,44 +339,85 @@ show_girdwnd  (gpointer, TImgData *imgdata)
     image = gtk_image_new ();
     gtk_misc_set_alignment (GTK_MISC(image), 0.0,0.0);
 
-
-    cr = gdk_cairo_create (GDK_DRAWABLE (scrolled_window->window));
-
-
     GtkWidget *event_box;
     event_box = gtk_event_box_new ();
     gtk_container_add (GTK_CONTAINER (event_box), image);
 
-    //TSignalData d;
-    d.idata = imgdata;
-    d.cr = cr;
-    d.image = image;
+    TSignalData *d;
+
+    if(imgdata->is_source)
+        d = &src_sigdata;
+    else
+        d = &dst_sigdata;
+
+    d->idata = imgdata;
+    d->image = image;
 
     g_signal_connect (G_OBJECT (event_box),
                       "motion_notify_event",//g_signal_name (GDK_MOTION_NOTIFY),
-                      G_CALLBACK (button_move_callback), (gpointer)&d);
+                      G_CALLBACK (button_move_callback), (gpointer)d);
 
 
     g_signal_connect (G_OBJECT (event_box),
                       "button-press-event",
-                      G_CALLBACK (button_press_callback), (gpointer)&d);
+                      G_CALLBACK (button_press_callback), (gpointer)d);
 
     g_signal_connect (G_OBJECT (event_box),
                       "button-release-event",
-                      G_CALLBACK (button_release_callback), (gpointer)&d);
+                      G_CALLBACK (button_release_callback), (gpointer)d);
 
 
     g_signal_connect (G_OBJECT (event_box),
                       "expose-event",
-                      G_CALLBACK (expose_callback), (gpointer)&d);
+                      G_CALLBACK (expose_callback), (gpointer)d);
 
     ocvImg2gtkImg(&(imgdata->ocvImage), &image);
     gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW (scrolled_window), event_box);
 
 
 
-    hbox = gtk_hbox_new (FALSE, 6);
-    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 6);
+    //hbox = gtk_hbox_new (FALSE, 6);
+    //gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 6);
+
+    vbox2 = gtk_vbox_new (FALSE, 6);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox2, FALSE, FALSE, 6);
+    GtkWidget *valign;
+
+    valign = gtk_alignment_new(0, 1, 0, 1);
+    label = gtk_label_new ("Horizontal line:");
+    gtk_container_add(GTK_CONTAINER(valign), label);
+    gtk_box_pack_start(GTK_BOX(vbox2), valign, FALSE, FALSE, 0);
+
+
+    valign = gtk_alignment_new(0, 1, 1, 1);
+    button = gtk_button_new_with_label ("Add");
+    g_signal_connect (G_OBJECT (button), "clicked", G_CALLBACK (add_line_horizontal), d);
+    gtk_container_add(GTK_CONTAINER(valign), button);
+    gtk_box_pack_start(GTK_BOX(vbox2), valign, FALSE, FALSE, 0);
+
+    valign = gtk_alignment_new(0, 1, 1, 1);
+    button = gtk_button_new_with_label ("Remove");
+    g_signal_connect (G_OBJECT (button), "clicked", G_CALLBACK (remove_line_horizontal), d);
+    gtk_container_add(GTK_CONTAINER(valign), button);
+    gtk_box_pack_start(GTK_BOX(vbox2), valign, FALSE, FALSE, 0);
+
+
+    valign = gtk_alignment_new(0, 1, 0, 1);
+    label = gtk_label_new ("Vertical line:");
+    gtk_container_add(GTK_CONTAINER(valign), label);
+    gtk_box_pack_start(GTK_BOX(vbox2), valign, FALSE, FALSE, 0);
+
+    valign = gtk_alignment_new(0, 1, 1, 1);
+    button = gtk_button_new_with_label ("Add");
+    g_signal_connect (G_OBJECT (button), "clicked", G_CALLBACK (add_line_vertical), d);
+    gtk_container_add(GTK_CONTAINER(valign), button);
+    gtk_box_pack_start(GTK_BOX(vbox2), valign, FALSE, FALSE, 0);
+
+    valign = gtk_alignment_new(0, 1, 1, 1);
+    button = gtk_button_new_with_label ("Remove");
+    g_signal_connect (G_OBJECT (button), "clicked", G_CALLBACK (remove_line_vertical), d);
+    gtk_container_add(GTK_CONTAINER(valign), button);
+    gtk_box_pack_start(GTK_BOX(vbox2), valign, FALSE, FALSE, 0);
 
     //gtk_range_set_value  (GTK_RANGE(hscale), RANGE_MAX/2);
     //gtk_range_set_inverted (GTK_RANGE(vscale), TRUE);

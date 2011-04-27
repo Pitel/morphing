@@ -269,7 +269,6 @@ void zoomnormal()
     {
         zoom = 100;
         zoom_image();
-
     }
 }
 

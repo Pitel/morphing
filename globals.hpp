@@ -6,9 +6,11 @@
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 
+
+#include <iostream>
 using namespace cv;
 
-#define grid_max 500
+#define GRID_MAX 500
 
 
 static gint grid_xline = 4;
@@ -20,7 +22,7 @@ typedef struct imgs
     IplImage    *ocvImage;
     Mat         *ocvMatImage;
     Mat         *ocvMatGrid;
-    Point grid[grid_max];       //TODO - predelat na allokovani pole nebo z C++
+    Point grid[GRID_MAX];       //TODO - predelat na allokovani pole nebo z C++
     gboolean is_source;         // Source || Destination
 
 } TImgData;
@@ -33,8 +35,8 @@ static Mat *get_grid_mat_from_imgdata (TImgData *idata)
     for(int y = 0; y < grid_yline; y++)
         for(int x = 0; x < grid_xline; x++)
         {
-            int xgrid = idata->grid[x+y*grid_xline].x;
-            int ygrid = idata->grid[x+y*grid_xline].y;
+//            int xgrid = idata->grid[x+y*grid_xline].x;
+//            int ygrid = idata->grid[x+y*grid_xline].y;
 
 //            //preskoci krajni body
 //            if(xgrid <= 0 || xgrid >= idata->ocvImage->width)
@@ -51,7 +53,7 @@ static Mat *get_grid_mat_from_imgdata (TImgData *idata)
 //Vynuluje mrizku
 static void imgdata_grid_null (TImgData *idata)
 {
-    for(int i=0; i<grid_max; i++)
+    for(int i=0; i< GRID_MAX; i++)
     {
         idata->grid[i].x = -1;
         idata->grid[i].y = -1;
@@ -63,14 +65,22 @@ static void imgdata_grid_default (TImgData *idata)
 {
     imgdata_grid_null(idata);
 
-    gint step_h = idata->ocvImage->height / (grid_xline-1);
-    gint step_w = idata->ocvImage->width / (grid_yline-1);
+    gint step_x = (float) idata->ocvImage->height / (float) (grid_xline-1);
+    gint step_y = (float) idata->ocvImage->width / (float) (grid_yline-1);
 
+    //float x = ((float) idata->ocvImage->height) / ((float) (grid_xline-1));
+   // float y = ((float) idata->ocvImage->width) / ((float) (grid_yline-1));
+
+    //std::cout << "[" << grid_xline << "," << grid_yline << "]\t" << x << " " << y << " ------- " << step_x << " " << step_y << std::endl;
     for(int y=0; y < grid_yline; y++)
         for(int x=0; x < grid_xline; x++)
         {
-            idata->grid[x+y*grid_xline].y = (((y*step_h + step_h) > idata->ocvImage->height) ? idata->ocvImage->height : y*step_h) ;
-            idata->grid[x+y*grid_xline].x = (((x*step_w + step_w) > idata->ocvImage->width )? idata->ocvImage->width : x*step_w) ;
+          //  gint a = x*step_y;
+          //  gint b = y*step_x;
+            idata->grid[x+y*grid_xline].x = (((x*step_y) > idata->ocvImage->width )? idata->ocvImage->width : x*step_x);
+            idata->grid[x+y*grid_xline].y = (((y*step_x) > idata->ocvImage->height) ? idata->ocvImage->height : y*step_y);
+
+            //std::cout << a << "," << b << " - [" << idata->grid[x+y*grid_xline].x << "," << idata->grid[x+y*grid_xline].y << "] " << endl;
         }
 }
 
