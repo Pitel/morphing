@@ -179,11 +179,11 @@ open_file (gpointer, TImgData *img)
             gtk_label_set_text (GTK_LABEL(label_source), filetxt);
 
             if(!opencvMatImage)
-                opencvMatImage = new Mat(img->ocvMatImage->size(), img->ocvMatImage->type());
+                opencvMatImage =  new Mat(img->ocvImage, TRUE); // new Mat(img->ocvMatImage->size(), img->ocvMatImage->type());
             else
             {
                 opencvMatImage->release();
-                opencvMatImage = new Mat(img->ocvMatImage->size(), img->ocvMatImage->type());
+                opencvMatImage =  new Mat(img->ocvImage, TRUE); //new Mat(img->ocvMatImage->size(), img->ocvMatImage->type());
             }
         }
         else
