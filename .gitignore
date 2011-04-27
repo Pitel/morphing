@@ -3,7 +3,7 @@ morphing
 morphing-test
 *.png
 *.jp*g
-*.htm[l]
+*.htm*
 *.zip
 !bush.*
 !lenna.*
