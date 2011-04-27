@@ -65,8 +65,8 @@ static void imgdata_grid_default (TImgData *idata)
 {
     imgdata_grid_null(idata);
 
-    gint step_x = (float) idata->ocvImage->height / (float) (grid_xline-1);
-    gint step_y = (float) idata->ocvImage->width / (float) (grid_yline-1);
+    const unsigned int step_x = idata->ocvImage->width / (grid_xline - 1);
+    const unsigned int step_y = idata->ocvImage->height  / (grid_yline - 1);
 
     //float x = ((float) idata->ocvImage->height) / ((float) (grid_xline-1));
    // float y = ((float) idata->ocvImage->width) / ((float) (grid_yline-1));
@@ -77,8 +77,20 @@ static void imgdata_grid_default (TImgData *idata)
         {
           //  gint a = x*step_y;
           //  gint b = y*step_x;
-            idata->grid[x+y*grid_xline].x = (((x*step_y) > idata->ocvImage->width )? idata->ocvImage->width : x*step_x);
-            idata->grid[x+y*grid_xline].y = (((y*step_x) > idata->ocvImage->height) ? idata->ocvImage->height : y*step_y);
+          if (x <= 0) {
+          	idata->grid[x+y*grid_xline].x = 0;
+          } else if (x >= grid_xline - 1) {
+          	idata->grid[x+y*grid_xline].x = idata->ocvImage->width;
+          } else {
+            idata->grid[x+y*grid_xline].x = x * step_x;
+          }
+          if (y <= 0) {
+          	idata->grid[x+y*grid_xline].y = 0;
+          } else if (y >= grid_yline - 1) {
+          	idata->grid[x+y*grid_xline].y = idata->ocvImage->height;
+          } else {
+            idata->grid[x+y*grid_xline].y = y * step_y;
+          }
 
             //std::cout << a << "," << b << " - [" << idata->grid[x+y*grid_xline].x << "," << idata->grid[x+y*grid_xline].y << "] " << endl;
         }
