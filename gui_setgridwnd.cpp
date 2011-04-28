@@ -25,7 +25,7 @@ void
 add_line_vertical (GtkWidget *, TSignalData *sigdata)
 {
         if((sigdata->idata->grid_size->xline * (sigdata->idata->grid_size->yline + 1)) < GRID_MAX)
-            sigdata->idata->grid_size->yline++;
+            sigdata->idata->grid_size->xline++;
 
         gboolean ret;
         if(src_sigdata.idata != NULL)
@@ -59,7 +59,7 @@ void
 add_line_horizontal (GtkWidget *, TSignalData *sigdata)
 {
         if((sigdata->idata->grid_size->yline * (sigdata->idata->grid_size->xline + 1)) < GRID_MAX)
-            sigdata->idata->grid_size->xline++;
+            sigdata->idata->grid_size->yline++;
 
         gboolean ret;
         if(src_sigdata.idata != NULL)
@@ -94,7 +94,7 @@ void
 remove_line_vertical (GtkWidget *, TSignalData *sigdata)
 {
         if((sigdata->idata->grid_size->yline - 1) > 2)
-            sigdata->idata->grid_size->yline--;
+            sigdata->idata->grid_size->xline--;
 
         gboolean ret;
         if(src_sigdata.idata != NULL)
@@ -128,7 +128,7 @@ void
 remove_line_horizontal (GtkWidget *, TSignalData *sigdata)
 {
         if((sigdata->idata->grid_size->xline - 1) > 2)
-            sigdata->idata->grid_size->xline--;
+            sigdata->idata->grid_size->yline--;
 
         gboolean ret;
         if(src_sigdata.idata != NULL)
