@@ -483,6 +483,7 @@ int main (int argc, char *argv[])
     gtk_window_set_title (GTK_WINDOW (win), "ZPO - Morphing, gird warping");
     gtk_window_set_position (GTK_WINDOW (win), GTK_WIN_POS_CENTER);
     gtk_window_set_default_size(GTK_WINDOW(win), 500, 500);
+    gtk_window_set_icon(GTK_WINDOW(win), gdk_pixbuf_new_from_file("cibo00_Algebraic_Mosaic.svg", NULL));
     gtk_widget_realize (win);
     g_signal_connect (win, "destroy", gtk_main_quit, NULL);
 
