@@ -1,4 +1,5 @@
-CXXFLAGS=-O2 -pipe -pedantic -Wall -Wextra -march=native `pkg-config --cflags opencv gtk+-2.0 cairo`
+CXX=g++-4.5
+CXXFLAGS=-O2 -pipe -pedantic -Wall -Wextra -march=native -std=gnu++0x `pkg-config --cflags opencv gtk+-2.0 cairo`
 LDFLAGS=`pkg-config --libs opencv gtk+-2.0 cairo`
 
 .PHONY: clean doc
