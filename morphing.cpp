@@ -165,7 +165,10 @@ gboolean image_size_test ()
     if(src_imgdata.ocvMatImage.data != NULL && dst_imgdata.ocvMatImage.data != NULL)
         if((src_imgdata.ocvMatImage.cols != dst_imgdata.ocvMatImage.cols) || (src_imgdata.ocvMatImage.rows != dst_imgdata.ocvMatImage.rows))
         {
-            if(show_message (GTK_MESSAGE_INFO, "INFO: Source and destination image has different size!","","Press OK to resize destination image\nPress CANCEL to cancel opening image",""))
+            gchar *txt1 = g_strdup("INFO: Source and destination image has different size!");
+            gchar *txt2 = g_strdup("Press OK to resize destination image\nPress CANCEL to cancel opening image");
+
+            if(show_message (GTK_MESSAGE_INFO, "%s",txt1,"%s",txt2))
             {
                 Mat tmp = dst_imgdata.ocvMatImage.clone();
                 dst_imgdata.ocvMatImage.release();
@@ -176,6 +179,9 @@ gboolean image_size_test ()
             }
             else
                 return FALSE;
+
+            g_free(txt1);
+            g_free(txt2);
         }
 
     return TRUE;
@@ -234,7 +240,7 @@ open_file (gpointer, TImgData *img)
         char *filename;
         filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 
-
+        img->ocvMatImage.release();
 
         img->ocvMatImage = imread(filename);
 
@@ -421,7 +427,10 @@ void show_about (gpointer, GtkWidget *win)
                                   GTK_WINDOW( win ) );
     about = GTK_ABOUT_DIALOG( dialog );
 
+#if GTK_CHECK_VERSION(2,12,0)
     gtk_about_dialog_set_program_name( about, "ZPO - morphing, grid warping" );
+#endif
+
     gtk_about_dialog_set_version( about, "0.1.0" );
     gtk_about_dialog_set_copyright( about, "Copyright 2011 © Jan Kaláb, Jan Lipovský, František Skála" );
     gtk_about_dialog_set_website( about, "https://github.com/Pitel/morphing" );
