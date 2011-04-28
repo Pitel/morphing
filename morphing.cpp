@@ -15,9 +15,8 @@ GtkWidget *label_dest = NULL;
 GtkWidget *label_grid = NULL;
 
 
-Mat *opencvMatImage = NULL;
-IplImage *opencvImage = NULL;
-IplImage *opencvImageGTK = NULL; //Tady je kopie obrazku, ktera se pak zobrazuje v GTK
+Mat opencvMatImage;
+Mat opencvMatImageZOOM;
 GtkWidget *image = NULL;
 
 TGrid grid = {4,4};
@@ -33,28 +32,48 @@ gboolean bestfit = FALSE;
 
 static void zoom_image();
 static void zoomfit();
+int show_message (GtkMessageType type, const gchar *format, gchar *msgtxt, const gchar *format_sec, gchar *msgtxt_sec);
 
 static void
 show_morph_image (float ratio = 0.0)
 {
-    if(!src_imgdata.ocvMatImage || !src_imgdata.ocvMatImage)
+    if(src_imgdata.ocvMatImage.data == NULL || dst_imgdata.ocvMatImage.data == NULL)
         return;
 
-    morph(*src_imgdata.ocvMatImage, *dst_imgdata.ocvMatImage, *opencvMatImage, *src_imgdata.ocvMatGrid, *dst_imgdata.ocvMatGrid, ratio);
+    morph((src_imgdata.ocvMatImage), (dst_imgdata.ocvMatImage), opencvMatImage, (src_imgdata.ocvMatGrid), (dst_imgdata.ocvMatGrid), ratio);
 
-    if(!opencvImage)
-        cvReleaseImage(&opencvImage);
-
-    opencvImage = new IplImage(*opencvMatImage);
-
-    ocvCopyImg(&opencvImage, &opencvImageGTK);
+//    if(!opencvImage)
+//        cvReleaseImage(&opencvImage);
+//
+//    opencvImage = new IplImage(opencvMatImage);
+//
+//    ocvCopyImg(&opencvImage, &opencvImageGTK);
 
     if(bestfit)
+    {
         zoomfit();
-    else
+    }
+    else if (zoom != 100)
+    {
         zoom_image();
+    }
+    else
+    {
+        ocvMat2gtkImg(opencvMatImage, &image);
+    }
 
-    ocvImg2gtkImg(&opencvImageGTK, &image);
+//		imshow("src", *src_imgdata.ocvMatImage);
+//		imshow("dst", *dst_imgdata.ocvMatImage);
+//		imshow("out", *opencvMatImage);
+
+//	for (float ratio = 0; ratio <= 1; ratio += 0.25) {
+//        morph(*(src_imgdata.ocvMatImage), *(dst_imgdata.ocvMatImage), *(opencvMatImage), *(src_imgdata.ocvMatGrid), *(dst_imgdata.ocvMatGrid), ratio);
+//		stringstream ss;
+//		ss << ratio;
+//		imshow(ss.str(), *opencvMatImage);
+//	}
+
+
 }
 
 
@@ -63,7 +82,8 @@ change_corrent_step (GtkWidget *range, gpointer)
 {
     gtk_label_set_text (GTK_LABEL(label_grid), g_strdup_printf("%dx%d; %d points", grid.xline, grid.yline, grid.xline*grid.yline));
 
-    if(!src_imgdata.ocvImage || !dst_imgdata.ocvImage)
+
+    if(src_imgdata.ocvMatImage.data == NULL || dst_imgdata.ocvMatImage.data == NULL)
         return;
 
     float ratio = gtk_range_get_value (GTK_RANGE(range)) / RANGE_MAX;
@@ -76,6 +96,11 @@ change_corrent_step (GtkWidget *range, gpointer)
 void
 save_file()
 {
+    if(opencvMatImage.data == NULL)
+        return;
+
+    GtkFileFilter * fimg, * fall;
+
     GtkWidget *dialog;
     dialog = gtk_file_chooser_dialog_new ("Save image as...",
                                           GTK_WINDOW (win),
@@ -86,13 +111,43 @@ save_file()
 
     gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog), TRUE);
 
+    fimg = gtk_file_filter_new();
+    gtk_file_filter_set_name(fimg,"Images");
+    gtk_file_filter_add_mime_type (fimg, "image/png");
+    gtk_file_filter_add_mime_type (fimg, "image/jpeg");
+    gtk_file_filter_add_mime_type (fimg, "image/gif");
+    gtk_file_filter_add_mime_type (fimg, "image/tiff");
+    gtk_file_filter_add_mime_type (fimg, "image/bmp");
+    gtk_file_filter_add_mime_type (fimg, "image/x-cmu-raster");
+    gtk_file_filter_add_mime_type (fimg, "image/x-portable-bitmap");
+    gtk_file_filter_add_mime_type (fimg, "image/x-portable-graymap");
+    gtk_file_filter_add_mime_type (fimg, "image/x-portable-pixmap");
+    gtk_file_filter_add_mime_type (fimg, "image/x-cmu-raster");
+
+    gtk_file_filter_add_pattern(fimg,"*.bmp");
+    gtk_file_filter_add_pattern(fimg,"*.jpg");
+    gtk_file_filter_add_pattern(fimg,"*.jpeg");
+    gtk_file_filter_add_pattern(fimg,"*.jpe");
+    gtk_file_filter_add_pattern(fimg,"*.png");
+    gtk_file_filter_add_pattern(fimg,"*.pbm");
+    gtk_file_filter_add_pattern(fimg,"*.pgm");
+    gtk_file_filter_add_pattern(fimg,"*.ppm");
+    gtk_file_filter_add_pattern(fimg,"*.ras");
+    gtk_file_filter_add_pattern(fimg,"*.tiff");
+    gtk_file_filter_add_pattern(fimg,"*.tif");
+    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog),fimg);
+
+    fall = gtk_file_filter_new();
+    gtk_file_filter_set_name(fall,"All files");
+    gtk_file_filter_add_pattern(fall,"*");
+    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog),fall);
 
     if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
     {
         char *filename;
         filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 
-
+        IplImage *opencvImage = new IplImage(opencvMatImage);
         cvSaveImage(filename, opencvImage, 0);
 
         g_free (filename);
@@ -103,6 +158,28 @@ save_file()
 
 }
 
+
+gboolean image_size_test ()
+{
+
+    if(src_imgdata.ocvMatImage.data != NULL && dst_imgdata.ocvMatImage.data != NULL)
+        if((src_imgdata.ocvMatImage.cols != dst_imgdata.ocvMatImage.cols) || (src_imgdata.ocvMatImage.rows != dst_imgdata.ocvMatImage.rows))
+        {
+            if(show_message (GTK_MESSAGE_INFO, "INFO: Source and destination image has different size!","","Press OK to resize destination image\nPress CANCEL to cancel opening image",""))
+            {
+                Mat tmp = dst_imgdata.ocvMatImage.clone();
+                dst_imgdata.ocvMatImage.release();
+                resize(tmp, dst_imgdata.ocvMatImage, src_imgdata.ocvMatImage.size(), 0, 0, INTER_LINEAR);
+
+
+
+            }
+            else
+                return FALSE;
+        }
+
+    return TRUE;
+}
 
 
 void
@@ -158,39 +235,31 @@ open_file (gpointer, TImgData *img)
         filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 
 
-        if (img->ocvImage)
-            cvReleaseImage(&(img->ocvImage));
 
-        img->ocvImage = cvLoadImage(filename, CV_LOAD_IMAGE_COLOR);
+        img->ocvMatImage = imread(filename);
 
-        if(img->ocvMatImage)
-            img->ocvMatImage->release();
+        IplImage *tmp = new IplImage(img->ocvMatImage);
+        cvCvtColor(tmp, tmp, CV_BGR2RGB);
 
-        img->ocvMatImage = new Mat(img->ocvImage, TRUE);
-
+        if(!image_size_test())
+        {
+            gtk_widget_destroy (dialog);
+            return;
+        }
 
         imgdata_grid_default(img); //nejdrive spocitat mrizku
 
 
-        if(img->ocvMatGrid)
-            img->ocvMatGrid->release();
-
         img->ocvMatGrid = get_grid_mat_from_imgdata(img); //Pak mrizku dat do matice
 
 
-        const gchar *filetxt = g_strdup_printf("%s [%dx%d]", g_path_get_basename(filename), img->ocvImage->width, img->ocvImage->height);
+        const gchar *filetxt = g_strdup_printf("%s [%dx%d]", g_path_get_basename(filename), img->ocvMatImage.cols, img->ocvMatImage.rows);
 
         if (img->is_source)
         {
             gtk_label_set_text (GTK_LABEL(label_source), filetxt);
 
-            if(!opencvMatImage)
-                opencvMatImage =  new Mat(img->ocvImage, TRUE); // new Mat(img->ocvMatImage->size(), img->ocvMatImage->type());
-            else
-            {
-                opencvMatImage->release();
-                opencvMatImage =  new Mat(img->ocvImage, TRUE); //new Mat(img->ocvMatImage->size(), img->ocvMatImage->type());
-            }
+            opencvMatImage =  img->ocvMatImage.clone(); // new Mat(img->ocvMatImage->size(), img->ocvMatImage->type());
         }
         else
             gtk_label_set_text (GTK_LABEL(label_dest), filetxt);
@@ -198,11 +267,15 @@ open_file (gpointer, TImgData *img)
 
         gtk_label_set_text (GTK_LABEL(label_grid), g_strdup_printf("%dx%d; %d points", grid.xline, grid.yline, grid.xline*grid.yline));
 
-        if(dst_imgdata.ocvImage && src_imgdata.ocvImage)
-           show_morph_image(); //ocvImg2gtkImg(&opencvImage, &image);
+
+        if(src_imgdata.ocvMatImage.data != NULL && dst_imgdata.ocvMatImage.data != NULL)
+        {
+            show_morph_image();
+        }
 
         g_free (filename);
     }
+
     gtk_widget_destroy (dialog);
 }
 
@@ -210,10 +283,10 @@ open_file (gpointer, TImgData *img)
 void
 setup_grid (gpointer dummy, TImgData *imgdata)
 {
-    if( imgdata->ocvImage == NULL )
+    if( imgdata->ocvMatImage.data == NULL)
     {
         open_file(dummy, imgdata);
-        if( imgdata->ocvImage != NULL )
+        if( imgdata->ocvMatImage.data != NULL)
             show_girdwnd(dummy, imgdata);
     }
     else
@@ -224,23 +297,18 @@ void zoom_image ()
 {
     if (zoom != 100)
     {
-        gtk_image_clear(GTK_IMAGE(image));
 
-        if(opencvImageGTK != NULL)
-            cvReleaseImage(&opencvImageGTK);
+        double fzoom = zoom / 100.0;
 
-        opencvImageGTK = cvCreateImage(cvSize((int)((opencvImage->width*(zoom))/100), (int)((opencvImage->height*(zoom))/100) ), opencvImage->depth, opencvImage->nChannels );
+        resize(opencvMatImage, opencvMatImageZOOM, Size(), fzoom, fzoom, INTER_LINEAR);
 
-        cvResize(opencvImage, opencvImageGTK, CV_INTER_LINEAR);
-
-        ocvImg2gtkImg(&opencvImageGTK, &image);
-
+        ocvMat2gtkImg(opencvMatImageZOOM, &image);
     }
 }
 
 void zoomout()
 {
-    if(opencvImageGTK != NULL)
+    if(opencvMatImage.data != NULL)
     {
         if((zoom-10) > 0)
             zoom -= 10;
@@ -254,7 +322,7 @@ void zoomout()
 
 void zoomin()
 {
-    if(opencvImageGTK != NULL)
+    if(opencvMatImage.data != NULL)
     {
         zoom += 10;
         zoom_image();
@@ -264,55 +332,78 @@ void zoomin()
 void zoomnormal()
 {
 
-    bestfit = FALSE;
-
-    if(opencvImageGTK != NULL)
+    if(opencvMatImage.data != NULL)
     {
         zoom = 100;
-        zoom_image();
+
+        double fzoom = zoom / 100.0;
+        resize(opencvMatImage, opencvMatImageZOOM, Size(), fzoom, fzoom, INTER_LINEAR);
+        ocvMat2gtkImg(opencvMatImageZOOM, &image);
     }
+
+    bestfit = FALSE;
 }
 
 void zoomfit ()
 {
     bestfit = TRUE;
 
-    if(opencvImageGTK != NULL)
+    if(opencvMatImage.data != NULL)
     {
 
-        gint w = scrolled_window->allocation.width;
-        gint h = scrolled_window->allocation.height;
+        double w = scrolled_window->allocation.width;
+        double h = scrolled_window->allocation.height;
 
         if(w <= 0 || h <= 0)
             return;
 
-        int width, height;
+        double width, height;
 
         if(h < w)
         {
             height = h;
-            width = (int)(((float)opencvImage->width/(float)opencvImage->height) * h);
+            width = (((float)opencvMatImage.cols/(float)opencvMatImage.rows) * h);
         }
         else
         {
             width = w;
-            height =  (int)(((float)opencvImage->height/(float)opencvImage->width) * w);
+            height =  (((float)opencvMatImage.rows/(float)opencvMatImage.cols) * w);
         }
 
+        resize(opencvMatImage, opencvMatImageZOOM, Size(), width/opencvMatImage.cols, height/opencvMatImage.rows, INTER_LINEAR);
 
-        gtk_image_clear(GTK_IMAGE(image));
-
-        if(opencvImageGTK != NULL)
-            cvReleaseImage(&opencvImageGTK);
-
-        opencvImageGTK = cvCreateImage(cvSize(width, height), opencvImage->depth, opencvImage->nChannels );
-
-        cvResize(opencvImage, opencvImageGTK, CV_INTER_LINEAR);
-
-        ocvImg2gtkImg(&opencvImageGTK, &image);
-
+        ocvMat2gtkImg(opencvMatImageZOOM, &image);
     }
 }
+
+
+gboolean
+show_message (GtkMessageType type, const gchar *format, gchar *msgtxt, const gchar *format_sec, gchar *msgtxt_sec)
+{
+    GtkWidget *dialog;
+    gboolean ret = FALSE;
+
+    dialog = gtk_message_dialog_new ( NULL,
+                                      GTK_DIALOG_DESTROY_WITH_PARENT,
+                                      type,
+                                      GTK_BUTTONS_OK_CANCEL,
+                                      format,
+                                      msgtxt);
+
+    gtk_window_set_title (GTK_WINDOW (dialog), "ZPO - morphing, grid warping");
+
+    gtk_message_dialog_format_secondary_text ( GTK_MESSAGE_DIALOG (dialog),
+            format_sec,
+            msgtxt_sec);
+
+    if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_OK)
+        ret = TRUE;
+
+    gtk_widget_destroy (dialog);
+
+    return ret;
+}
+
 
 void show_about (gpointer, GtkWidget *win)
 {
@@ -413,7 +504,6 @@ int main (int argc, char *argv[])
     menuitem = gtk_menu_item_new_with_mnemonic ("Save image as...");
     gtk_menu_shell_append(GTK_MENU_SHELL(submenu), menuitem);
     g_signal_connect (GTK_OBJECT (menuitem), "activate", (GCallback) save_file, NULL);
-    g_signal_connect (GTK_OBJECT (menuitem), "activate", save_file, NULL);
     gtk_widget_show (menuitem);
 
     menuitem = gtk_separator_menu_item_new ();
@@ -493,7 +583,7 @@ int main (int argc, char *argv[])
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 0);
 
 
-  //  g_signal_connect (G_OBJECT (open), "clicked", G_CALLBACK (open_file), NULL);
+    //  g_signal_connect (G_OBJECT (open), "clicked", G_CALLBACK (open_file), NULL);
     g_signal_connect (G_OBJECT (save), "clicked", G_CALLBACK (save_file), NULL);
     g_signal_connect (G_OBJECT (zin), "clicked", G_CALLBACK (zoomin), NULL);
     g_signal_connect (G_OBJECT (zout), "clicked", G_CALLBACK (zoomout), NULL);
@@ -509,7 +599,7 @@ int main (int argc, char *argv[])
 //    gtk_box_pack_start(GTK_BOX(hbox), vbox2, FALSE, FALSE, 6);
 
 
-  //  GtkWidget *valign;
+    //  GtkWidget *valign;
 
 //    valign = gtk_alignment_new(0, 1, 1, 0);
 //    label = gtk_label_new ("Tools:");
@@ -557,14 +647,14 @@ int main (int argc, char *argv[])
     //gtk_range_set_value  (GTK_RANGE(hscale), RANGE_MAX/2);
     //gtk_range_set_inverted (GTK_RANGE(vscale), TRUE);
 
-   // g_signal_connect (G_OBJECT (vscale), "value-changed", G_CALLBACK (change_values), &(player.eq[i]));
+    // g_signal_connect (G_OBJECT (vscale), "value-changed", G_CALLBACK (change_values), &(player.eq[i]));
 
     gtk_box_pack_start(GTK_BOX(hbox), hscale, TRUE, TRUE, 6);
 
-   // gtk_misc_set_alignment (GTK_MISC(image_left), 0.0,0.0);
+    // gtk_misc_set_alignment (GTK_MISC(image_left), 0.0,0.0);
 
     //gtk_box_pack_start (GTK_BOX (hbox), image_left, FALSE, FALSE, 6);
-   // gtk_box_pack_start (GTK_BOX (hbox), image_center, FALSE, FALSE, 6);
+    // gtk_box_pack_start (GTK_BOX (hbox), image_center, FALSE, FALSE, 6);
 
     //gtk_window_set_default_size (GTK_WINDOW (image_center->window), 200,200);
 
