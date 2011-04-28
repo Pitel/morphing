@@ -337,6 +337,7 @@ show_girdwnd  (gpointer, TImgData *imgdata)
 
     gtk_window_set_position (GTK_WINDOW (win), GTK_WIN_POS_CENTER);
     gtk_window_set_default_size(GTK_WINDOW(win), 600, 500);
+    gtk_window_set_icon(GTK_WINDOW(win), gdk_pixbuf_new_from_file("cibo00_Algebraic_Mosaic.svg", NULL));	//http://www.openclipart.org/detail/12322
     gtk_widget_realize (win);
     g_signal_connect (win, "destroy", (GCallback) close_wnd, win);
 

@@ -437,6 +437,7 @@ void show_about (gpointer, GtkWidget *win)
     gtk_about_dialog_set_version( about, "0.1.0" );
     gtk_about_dialog_set_copyright( about, "Copyright 2011 © Jan Kaláb, Jan Lipovský, František Skála" );
     gtk_about_dialog_set_website( about, "https://github.com/Pitel/morphing" );
+    gtk_about_dialog_set_logo(about, gdk_pixbuf_new_from_file("cibo00_Algebraic_Mosaic.svg", NULL));	//http://www.openclipart.org/detail/12322
     gtk_about_dialog_set_authors( about, auth );
 
     gtk_widget_show_all(dialog);
@@ -483,7 +484,7 @@ int main (int argc, char *argv[])
     gtk_window_set_title (GTK_WINDOW (win), "ZPO - Morphing, gird warping");
     gtk_window_set_position (GTK_WINDOW (win), GTK_WIN_POS_CENTER);
     gtk_window_set_default_size(GTK_WINDOW(win), 500, 500);
-    gtk_window_set_icon(GTK_WINDOW(win), gdk_pixbuf_new_from_file("cibo00_Algebraic_Mosaic.svg", NULL));
+    gtk_window_set_icon(GTK_WINDOW(win), gdk_pixbuf_new_from_file("cibo00_Algebraic_Mosaic.svg", NULL));	//http://www.openclipart.org/detail/12322
     gtk_widget_realize (win);
     g_signal_connect (win, "destroy", gtk_main_quit, NULL);
 
