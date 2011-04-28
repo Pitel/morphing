@@ -5,10 +5,7 @@ LDFLAGS=`pkg-config --libs opencv gtk+-2.0 cairo`
 
 all: morphing
 
-#%.o: %.cpp
-#	$(CXX) $(CXXFLAGS) $(LDFLAGS) -c $<
-
-morphing: gui_setgridwnd.o cvmorph.o
+morphing: gui_setgridwnd.o cvmorph.o globals.o
 
 morphing-test: cvmorph.o
 
