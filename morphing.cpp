@@ -174,6 +174,9 @@ gboolean image_size_test ()
                 dst_imgdata.ocvMatImage.release();
                 resize(tmp, dst_imgdata.ocvMatImage, src_imgdata.ocvMatImage.size(), 0, 0, INTER_LINEAR);
 
+                //Oprava mrizky u resiznute matice
+                imgdata_grid_default(&dst_imgdata); //nejdrive spocitat mrizku
+                dst_imgdata.ocvMatGrid = get_grid_mat_from_imgdata(&dst_imgdata); //Pak mrizku dat do matice
 
 
             }
