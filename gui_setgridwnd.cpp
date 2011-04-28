@@ -22,7 +22,7 @@ TSignalData dst_sigdata, src_sigdata;
 
 
 void
-add_line_vertical (GtkWidget *widget, TSignalData *sigdata)
+add_line_vertical (TSignalData *sigdata)
 {
         if((sigdata->idata->grid_size->xline * (sigdata->idata->grid_size->yline + 1)) < GRID_MAX)
             sigdata->idata->grid_size->yline++;
@@ -56,7 +56,7 @@ add_line_vertical (GtkWidget *widget, TSignalData *sigdata)
 }
 
 void
-add_line_horizontal (GtkWidget *widget, TSignalData *sigdata)
+add_line_horizontal (TSignalData *sigdata)
 {
         if((sigdata->idata->grid_size->yline * (sigdata->idata->grid_size->xline + 1)) < GRID_MAX)
             sigdata->idata->grid_size->xline++;
@@ -91,7 +91,7 @@ add_line_horizontal (GtkWidget *widget, TSignalData *sigdata)
 
 
 void
-remove_line_vertical (GtkWidget *widget, TSignalData *sigdata)
+remove_line_vertical (TSignalData *sigdata)
 {
         if((sigdata->idata->grid_size->yline - 1) > 2)
             sigdata->idata->grid_size->yline--;
@@ -125,7 +125,7 @@ remove_line_vertical (GtkWidget *widget, TSignalData *sigdata)
 }
 
 void
-remove_line_horizontal (GtkWidget *widget, TSignalData *sigdata)
+remove_line_horizontal (TSignalData *sigdata)
 {
         if((sigdata->idata->grid_size->xline - 1) > 2)
             sigdata->idata->grid_size->xline--;
@@ -204,7 +204,6 @@ void draw_grid (cairo_t *cr, TImgData *imgdata)
 
 static gboolean
 button_release_callback (GtkWidget      *event_box,
-                         GdkEventButton  *event,
                          TSignalData     *sigdata)
 {
 
@@ -215,8 +214,7 @@ button_release_callback (GtkWidget      *event_box,
 }
 
 static gboolean
-button_press_callback (GtkWidget       *event_box,
-                       GdkEventButton  *event,
+button_press_callback (GdkEventButton  *event,
                        TSignalData     *sigdata)
 {
   //  printf("%f, %f\n",event->x, event->y);
@@ -267,7 +265,6 @@ button_move_callback (GtkWidget      *event_box,
 
 static gboolean
 expose_callback (GtkWidget      *event_box,
-                 GdkEventButton *event,
                  TSignalData    *sigdata)
 {
     cairo_t *cr;
