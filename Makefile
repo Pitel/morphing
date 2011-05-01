@@ -17,4 +17,4 @@ doc:
 	echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Morphing</title></head><body>' > README.html && markdown README.md >> README.html && echo '</body></html>' >> README.html
 
 pack: doc
-	zip -9 xlogin00.zip *.cpp *.hpp Makefile README.html lenna.jpg bush.jpg cibo00_Algebraic_Mosaic.svg
+	zip -9 xlogin00.zip *.cpp *.hpp Makefile README.html *.jpg cibo00_Algebraic_Mosaic.svg
