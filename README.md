@@ -49,7 +49,7 @@ Na panelu nástrojů v hlavním okně programu se nachází tlačítko "Save as"
 
 Zhodnocení výsledků
 -------------------
-TODO
+Výsledkem je program, který umožňuje plynulý přechod mezi dvěma obrázky na základě zvolené sítě, čímž je splněn hlavní bod zadání. Během programování jsme získali zkušenosti v práci s knihovnou OpenCV, která se po počátečních těžkostech ukázala jako velice schopná. Zároveň je s podivem, že knihovna zabývající se zpracováním obsahu nemá v dokumentaci obrázek skoro žádný, stejně tak chybí ukázkové kusy kódu, která by právě z počátku práci velice usnadnily.
 
 Použitá literatura
 ------------------
