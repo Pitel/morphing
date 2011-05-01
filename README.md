@@ -39,13 +39,13 @@ Popis obsluhy programu
 Po spuštění programu `./morphing` se zobrazí hlavní okno. Aby bylo možné vyzkoušet, jak aplikace pěkně pracuje, je nutné nejprve otevřít dva soubory (obrázky), se stejnými rozměry (např: 512x512). K tomu slouží položky "Load source file" a "Load destination file", které se nachází ve "File" menu v hlavní nabídce programu. Po úspěšném otevření obou souborů je možné přejít k nastaveni mřížky. Mřížku lze upravit v okně, které se otevře při výběru "Set source grid" resp. "Set destination grid" z "Tool" menu v hlavní nabídce programu. 
 
 #### Nastavení mřížky ####
-Nejdříve je vhodné si nastavit počet sloupců a řádků mřížky. K tomu slouží tlačítka "Add" a "Remove" v leve části okna. Poté je možne upravit rozmístění jednotlivých uzlů (průsečíků) mřížky. To provedeme přetažením jednotlivých uzlů pomocí kurzoru myši. Tím nastavíme klíčové body na pozice v obrázku.
+Nejdříve je vhodné si nastavit počet sloupců a řádků mřížky. K tomu slouží tlačítka "Add" a "Remove" v levé části okna. Poté je možné upravit rozmístění jednotlivých uzlů (průsečíků) mřížky. To provedeme přetažením jednotlivých uzlů pomocí kurzoru myši. Tím nastavíme klíčové body na pozice v obrázku.
 
 #### Morphing ####
 Po nastavení mřížky a rozmístění bodů v source i destination souboru můžeme přejít k zobrazení morphingu. Ve spodní části hlavního okna se nachází posuvník, kterým je možné se posouvat po krocích a vidět tak průběh morphingu v dané části.
 
 #### Panel nástrojů ####
-Na panelu nástrojů v hlavním kně programu se nachází tlačítko "Save as", pomocí kterého lze uložit obrázek morphingu v právě nastaveném kroce. Dále je možně obrázek, který se zobrazuje v okně, pro lepší viditelnost zoomovat a nebo nastavit "Best fit". Při tomto nastaveni se zobrazí vždy celý obrázek do okna.
+Na panelu nástrojů v hlavním okně programu se nachází tlačítko "Save as", pomocí kterého lze uložit obrázek morphingu v právě nastaveném kroce. Dále je možně obrázek, který se zobrazuje v okně, pro lepší viditelnost zoomovat a nebo nastavit "Best fit". Při tomto nastaveni se zobrazí vždy celý obrázek do okna.
 
 Zhodnocení výsledků
 -------------------
