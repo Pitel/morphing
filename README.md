@@ -17,7 +17,7 @@ Datum vypracování
 
 Popis řešení projektu
 ---------------------
-Morphing je kombinaci warpingu 2 obrázků proti sobě a jejich následného blendingu.
+Morphing je kombinaci warpingu dvou obrázků proti sobě a jejich následného blendingu.
 
 Na počátečním a koncovém obrázku je nejdříve vyznačena síť, která vytváří konvexní čtyřúhelníkové dlaždice (na každém obrázku jinak, ale hustota sítě je stejná). Ideálně by uzly této sítě měly vyznačovat stejná místa na obou obrázcích (oči, ústa, apod.). Během morphingu je pak původní obrázek postupně warpován na síť koncového obrázku, a naopak koncový obrázek je nejdříve zwarpován podle sítě počátečního obrázku a následně se vrací do normálu. Warpované obrázky jsou navíc během morphingu blendovány s různými koeficienty tak, aby jeden přecházel do druhého.
 
@@ -30,7 +30,7 @@ Na obrázku výše můžete vidět jak postupně probíhá síťový warping. Wa
 
 Bohužel, perspektivní korekce neprovádí změny tak lokálně, jak bychom rádi. Pokud na obdélníku změníme pouze jeden jeho vrchol, celý obrázek se *zkroutí*. Na obrázku výše si tohoto jevu můžete povšimnout na nenavazujících hranách klobouku a ramene. Tato vada ovšem není tak patrná, pokud je síť dostatečně hustá, a změny v sítích nejsou příliš velké. Tudíž pro morphing dvou obličejů je perspektivní transformace dostačující.
 
-Také jsme přemýšleli o vyžití mapování mapování textur v OpenGL, ale nakonec jsme tuto variantu zavrhli, a zůstali u knihovny OpenCL.
+Také jsme přemýšleli o vyžití mapování mapování textur v OpenGL, ale nakonec jsme tuto variantu zavrhli, a zůstali u knihovny OpenCV.
 
 Popis obsluhy programu
 ----------------------
