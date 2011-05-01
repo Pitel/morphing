@@ -25,6 +25,8 @@ Při vhodně zvolených uzlových bodech je tak výsledkem morphingu např. plyn
 
 Popis obsluhy programu
 ----------------------
+![Screenshot programu](screenshot.jpg)
+
 TODO
 
 Zhodnocení výsledků
