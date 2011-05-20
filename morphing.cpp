@@ -4,6 +4,8 @@
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 
+#include <iostream>
+
 #include "cvmorph.hpp"
 #include "gui_setgridwnd.hpp"
 #include "globals.hpp"
@@ -130,7 +132,7 @@ void *play_thread (void *p)
 
         //gtk_range_set_value (GTK_RANGE(hscale), i);
 
-	   gchar *n = g_strdup_printf("zpotmpimg%d.jpg",i);
+	   gchar *n = g_strdup_printf(".zpotmpimg%d.jpg",i);
 
        gtk_image_set_from_file(GTK_IMAGE(tmp->imageGTK), n);
        //gtk_image_set_from_file(GTK_IMAGE(tmp->imageGTK), n);
@@ -164,6 +166,15 @@ stop_click ()
     if(play_data.playing)
     {
         play_data.playing = FALSE;
+
+        for(int i = 0; i <= RANGE_MAX; i++)
+        {
+            const gchar *n = g_strdup_printf(".zpotmpimg%d.jpg",i);
+
+            remove(n);
+
+        }
+
     }
 }
 
@@ -208,7 +219,7 @@ play_click ()
 
            // g_array_append_val(play_data.images, tmpMat);
 
-            gchar *n = g_strdup_printf("zpotmpimg%d.jpg",i);
+            gchar *n = g_strdup_printf(".zpotmpimg%d.jpg",i);
 
             cvSaveImage(n, tmp,0);
         }
