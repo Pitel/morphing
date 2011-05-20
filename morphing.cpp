@@ -13,7 +13,10 @@ GtkWidget *scrolled_window = NULL;
 GtkWidget *label_source = NULL;
 GtkWidget *label_dest = NULL;
 GtkWidget *label_grid = NULL;
+GtkWidget *label_steps = NULL;
+GtkWidget *hscale = NULL;
 
+pthread_t playeThread;
 
 Mat opencvMatImage;
 Mat opencvMatImageZOOM;
@@ -23,12 +26,14 @@ TGrid grid = {4,4};
 
 TImgData src_imgdata, dst_imgdata;
 
+TPLay play_data;
+
 int zoom = 100;
 gboolean bestfit = FALSE;
 
 #define RANGE_MIN   0
-#define RANGE_MAX   10
 #define RANGE_STEP  1
+int RANGE_MAX = 10;
 
 static void zoom_image();
 static void zoomfit();
@@ -89,6 +94,184 @@ change_corrent_step (GtkWidget *range, gpointer)
     float ratio = gtk_range_get_value (GTK_RANGE(range)) / RANGE_MAX;
 
     show_morph_image(ratio);
+}
+
+
+
+void *play_thread (void *p)
+{
+
+    TPLay *tmp = (TPLay *)p;
+    int i = 0;
+
+    while(tmp->playing)
+    {
+
+        //tmpM = tmp->images[i];
+
+
+       // gchar *n = g_strdup_printf(".zpotmpimg%d.jpg",i);
+
+      //  gtk_image_set_from_file(GTK_IMAGE(tmp->imageGTK), n);
+
+        //gtk_image_set_from_pixbuf(GTK_IMAGE(tmp->imageGTK), gtk_image_get_pixbuf(GTK_IMAGE(img)));
+        //ocvMat2gtkImg(*tmpM, &(tmp->imageGTK));
+
+
+//        float ratio = (float) i/RANGE_MAX;
+//
+//        morph((src_imgdata.ocvMatImage), (dst_imgdata.ocvMatImage), opencvMatImage, (src_imgdata.ocvMatGrid), (dst_imgdata.ocvMatGrid), ratio);
+//        ocvMat2gtkImg(opencvMatImage, &(tmp->imageGTK));
+//
+//
+//
+//        usleep(2000);
+
+
+        gtk_range_set_value (GTK_RANGE(hscale), i);
+
+        i++;
+
+        if(i > RANGE_MAX)
+            i = 0;
+
+        sleep(1);
+
+    }
+
+    pthread_exit (NULL);
+    return NULL;
+}
+
+
+static void
+stop_click ()
+{
+    if(play_data.playing)
+    {
+        play_data.playing = FALSE;
+    }
+}
+
+
+static void
+play_click ()
+{
+    if(src_imgdata.ocvMatImage.data == NULL || dst_imgdata.ocvMatImage.data == NULL)
+        return;
+
+    if(!play_data.playing)
+    {
+
+       // play_data.images = //g_array_new(FALSE,FALSE, sizeof(Mat));
+
+      // Mat *imgs[RANGE_MAX+1];
+
+//       play_data.images = new Mat *[RANGE_MAX+1];
+//
+//
+//        for(int i = 0; i <= RANGE_MAX; i++)
+//        {
+//            Mat *tmpMat = new Mat(opencvMatImage);
+//
+//            //*tmpMat = opencvMatImage.clone();
+//
+//
+//            float ratio = (float) i/RANGE_MAX;
+//
+//            morph((src_imgdata.ocvMatImage), (dst_imgdata.ocvMatImage), *tmpMat, (src_imgdata.ocvMatGrid), (dst_imgdata.ocvMatGrid), ratio);
+//            //ocvMat2gtkImg(tmpMat, &img);
+//
+//            play_data.images[i] = tmpMat;
+//
+//            IplImage *tmp = new IplImage(*play_data.images[i]);
+//            cvCvtColor(tmp, tmp, CV_BGR2RGB);
+//
+//           // GtkWidget *img = gtk_image_new ();
+//           // ocvMat2gtkImg(tmpMat, &img);
+//
+//            //gtk_image_set_from_pixbuf(GTK_IMAGE(img), gdk_pixbuf_new_from_data((guchar*) tmp->imageData, GDK_COLORSPACE_RGB, FALSE, tmp->depth, tmp->width, tmp->height, (tmp->widthStep), NULL, NULL));
+//
+//           // g_array_append_val(play_data.images, tmpMat);
+//
+//            gchar *n = g_strdup_printf(".zpotmpimg%d.jpg",i);
+//
+//            cvSaveImage(n, tmp,0);
+//        }
+
+      //  play_data.images = &imgs;
+
+        play_data.playing = TRUE;
+        pthread_create (&playeThread, NULL, play_thread, &play_data);
+    }
+
+}
+
+
+
+void show_set_steps ()
+{
+    GtkWidget *dialog, *label, *content_area, *halign, *hsep, *entry_rangemax, *vbox;
+
+    gchar *command = g_strdup_printf("%d", RANGE_MAX);
+
+    /* Create the widgets */
+    dialog = gtk_dialog_new_with_buttons ("Set number of steps",
+                                          GTK_WINDOW (win),
+                                          GTK_DIALOG_DESTROY_WITH_PARENT,
+                                          GTK_STOCK_APPLY, GTK_RESPONSE_APPLY,
+                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                          NULL);
+
+    content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+
+    vbox = gtk_vbox_new(FALSE,6);
+    gtk_container_add (GTK_CONTAINER (content_area), vbox);
+
+    gtk_container_set_border_width (GTK_CONTAINER (vbox), 10);
+
+    halign = gtk_alignment_new(0, 0, 0, 1);
+    label = gtk_label_new ("Number of morphing steps (default 10):");
+    gtk_container_add(GTK_CONTAINER(halign), label);
+    gtk_box_pack_start (GTK_BOX (vbox),  halign,  FALSE, TRUE, 0);
+
+
+    /* ----- */
+    hsep = gtk_hseparator_new();
+    gtk_box_pack_start (GTK_BOX (vbox), hsep,  FALSE, TRUE, 0);
+
+
+    entry_rangemax = gtk_entry_new ();
+    gtk_box_pack_start (GTK_BOX (vbox), entry_rangemax,  FALSE, TRUE, 0);
+    gtk_entry_set_text (GTK_ENTRY(entry_rangemax), command);
+    //gtk_entry_set_width_chars (GTK_ENTRY(entry_rangemax), strlen);
+
+    /* ----- */
+    hsep = gtk_hseparator_new();
+    gtk_box_pack_start (GTK_BOX (vbox), hsep,  FALSE, TRUE, 0);
+
+    gtk_widget_show_all(dialog);
+
+    if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_APPLY)
+    {
+
+        RANGE_MAX = atoi(gtk_entry_get_text (GTK_ENTRY(entry_rangemax)));
+
+        if (RANGE_MAX <= 0)
+            RANGE_MAX = 10;
+
+        gchar *tmp = g_strdup_printf("%d", RANGE_MAX);
+
+        gtk_label_set_text (GTK_LABEL(label_steps), tmp);
+
+        gtk_range_set_range (GTK_RANGE(hscale), RANGE_MIN, RANGE_MAX);
+
+
+        g_free(tmp);
+    }
+
+    g_free(command);
+    gtk_widget_destroy (dialog);
 }
 
 
@@ -473,6 +656,10 @@ int main (int argc, char *argv[])
     src_imgdata.grid_size = &grid;
     dst_imgdata.grid_size = &grid;
 
+    /* Threads init */
+    g_thread_init (NULL);
+    gdk_threads_init ();
+
     /* Initialize GTK+ */
     g_log_set_handler ("Gtk", G_LOG_LEVEL_WARNING, (GLogFunc) gtk_false, NULL);
     gtk_init (&argc, &argv);
@@ -546,6 +733,12 @@ int main (int argc, char *argv[])
     menuitem = gtk_menu_item_new_with_mnemonic ("Set destination gird");
     gtk_menu_shell_append(GTK_MENU_SHELL(submenu), menuitem);
     g_signal_connect (GTK_OBJECT (menuitem), "activate",  (GCallback) setup_grid, (gpointer) &dst_imgdata);
+    gtk_widget_show (menuitem);
+
+
+    menuitem = gtk_menu_item_new_with_mnemonic ("Set morphing steps");
+    gtk_menu_shell_append(GTK_MENU_SHELL(submenu), menuitem);
+    g_signal_connect (GTK_OBJECT (menuitem), "activate",  (GCallback) show_set_steps, NULL);
     gtk_widget_show (menuitem);
 
 
@@ -649,7 +842,6 @@ int main (int argc, char *argv[])
     gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW (scrolled_window), image);
 
 
-    GtkWidget *hscale = NULL;
     hscale = gtk_hscale_new_with_range(RANGE_MIN, RANGE_MAX, RANGE_STEP);
 
     g_signal_connect (G_OBJECT (hscale), "value-changed", G_CALLBACK (change_corrent_step), NULL);
@@ -658,12 +850,31 @@ int main (int argc, char *argv[])
     hbox = gtk_hbox_new (FALSE, 6);
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 6);
 
-    //gtk_range_set_value  (GTK_RANGE(hscale), RANGE_MAX/2);
-    //gtk_range_set_inverted (GTK_RANGE(vscale), TRUE);
 
-    // g_signal_connect (G_OBJECT (vscale), "value-changed", G_CALLBACK (change_values), &(player.eq[i]));
+    GtkWidget *button = gtk_button_new ();
+    GtkWidget *img = gtk_image_new_from_stock(GTK_STOCK_MEDIA_PLAY, GTK_ICON_SIZE_BUTTON);
+    gtk_button_set_image (GTK_BUTTON(button), img);
 
+    g_signal_connect (G_OBJECT (button), "clicked", G_CALLBACK (play_click), NULL);
+
+
+    gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 6);
+
+
+
+    button = gtk_button_new ();
+    img = gtk_image_new_from_stock(GTK_STOCK_MEDIA_STOP, GTK_ICON_SIZE_BUTTON);
+    gtk_button_set_image (GTK_BUTTON(button), img);
+
+    g_signal_connect (G_OBJECT (button), "clicked", G_CALLBACK (stop_click), NULL);
+
+    gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 0);
+
+
+    //RANGE
     gtk_box_pack_start(GTK_BOX(hbox), hscale, TRUE, TRUE, 6);
+
+
 
     // gtk_misc_set_alignment (GTK_MISC(image_left), 0.0,0.0);
 
@@ -671,6 +882,13 @@ int main (int argc, char *argv[])
     // gtk_box_pack_start (GTK_BOX (hbox), image_center, FALSE, FALSE, 6);
 
     //gtk_window_set_default_size (GTK_WINDOW (image_center->window), 200,200);
+
+
+
+//    play_data.hscale = hscale;
+    play_data.imageGTK = image;
+    play_data.images = NULL;
+    play_data.playing = FALSE;
 
     GtkWidget * hsep = gtk_hseparator_new();
     gtk_box_pack_start(GTK_BOX(vbox), hsep, FALSE, FALSE, 2);
@@ -709,6 +927,7 @@ int main (int argc, char *argv[])
     halign = gtk_alignment_new(0, 0, 0, 1);
 
 
+    halign = gtk_alignment_new(0, 0, 0, 1);
     label = gtk_label_new ("Grid:");
     gtk_container_add(GTK_CONTAINER(halign), label);
     gtk_table_attach(GTK_TABLE(table), halign, 0, 1, 3, 4,  (GtkAttachOptions)(GTK_FILL ),(GtkAttachOptions) (GTK_FILL | GTK_EXPAND), 6, 2);
@@ -720,10 +939,27 @@ int main (int argc, char *argv[])
     gtk_table_attach(GTK_TABLE(table), halign, 1, 2, 3, 4,  (GtkAttachOptions)(GTK_FILL ),(GtkAttachOptions) (GTK_FILL | GTK_EXPAND), 6, 2);
 
 
+    halign = gtk_alignment_new(0, 0, 0, 1);
+    label = gtk_label_new ("Morphing steps:");
+    gtk_container_add(GTK_CONTAINER(halign), label);
+    gtk_table_attach(GTK_TABLE(table), halign, 0, 1, 4, 5,  (GtkAttachOptions)(GTK_FILL ),(GtkAttachOptions) (GTK_FILL | GTK_EXPAND), 6, 2);
+
+
+    halign = gtk_alignment_new(0, 0, 0, 1);
+    label_steps = gtk_label_new ("10");
+    gtk_container_add(GTK_CONTAINER(halign), label_steps);
+    gtk_table_attach(GTK_TABLE(table), halign, 1, 2, 4, 5,  (GtkAttachOptions)(GTK_FILL ),(GtkAttachOptions) (GTK_FILL | GTK_EXPAND), 6, 2);
+
+
+
 
     /* Enter the main loop */
     gtk_widget_show_all (win);
+
+    gdk_threads_enter ();
     gtk_main ();
+    gdk_threads_leave ();
+
     return 0;
 }
 

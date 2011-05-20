@@ -33,6 +33,16 @@ typedef struct imgs
 } TImgData;
 
 
+typedef struct play
+{
+   // GtkWidget *hscale; //slider
+    GtkWidget *imageGTK;
+    Mat     **images; //array of images
+    gboolean   playing;
+} TPLay;
+
+
+
 Mat get_grid_mat_from_imgdata (TImgData *idata);
 
 //Vynuluje mrizku
