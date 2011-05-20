@@ -106,7 +106,7 @@ void *play_thread (void *p)
 
     while(tmp->playing)
     {
-
+        gdk_threads_enter();
         //tmpM = tmp->images[i];
 
 
@@ -128,14 +128,28 @@ void *play_thread (void *p)
 //        usleep(2000);
 
 
-        gtk_range_set_value (GTK_RANGE(hscale), i);
+        //gtk_range_set_value (GTK_RANGE(hscale), i);
+
+	   gchar *n = g_strdup_printf("zpotmpimg%d.jpg",i);
+
+       gtk_image_set_from_file(GTK_IMAGE(tmp->imageGTK), n);
+       //gtk_image_set_from_file(GTK_IMAGE(tmp->imageGTK), n);
+
 
         i++;
 
         if(i > RANGE_MAX)
+        {
             i = 0;
+            //gdk_window_process_updates(GDK_WINDOW(tmp->imageGTK->window), TRUE);
 
+        }
+        gdk_window_invalidate_rect (GDK_WINDOW(tmp->imageGTK->window), NULL, TRUE);
+
+        gdk_threads_leave();
         sleep(1);
+
+		//gdk_window_process_updates (GDK_WINDOW(tmp->wnd->window), TRUE);
 
     }
 
@@ -170,34 +184,34 @@ play_click ()
 //       play_data.images = new Mat *[RANGE_MAX+1];
 //
 //
-//        for(int i = 0; i <= RANGE_MAX; i++)
-//        {
-//            Mat *tmpMat = new Mat(opencvMatImage);
-//
-//            //*tmpMat = opencvMatImage.clone();
-//
-//
-//            float ratio = (float) i/RANGE_MAX;
-//
-//            morph((src_imgdata.ocvMatImage), (dst_imgdata.ocvMatImage), *tmpMat, (src_imgdata.ocvMatGrid), (dst_imgdata.ocvMatGrid), ratio);
-//            //ocvMat2gtkImg(tmpMat, &img);
-//
-//            play_data.images[i] = tmpMat;
-//
-//            IplImage *tmp = new IplImage(*play_data.images[i]);
-//            cvCvtColor(tmp, tmp, CV_BGR2RGB);
-//
-//           // GtkWidget *img = gtk_image_new ();
-//           // ocvMat2gtkImg(tmpMat, &img);
-//
-//            //gtk_image_set_from_pixbuf(GTK_IMAGE(img), gdk_pixbuf_new_from_data((guchar*) tmp->imageData, GDK_COLORSPACE_RGB, FALSE, tmp->depth, tmp->width, tmp->height, (tmp->widthStep), NULL, NULL));
-//
-//           // g_array_append_val(play_data.images, tmpMat);
-//
-//            gchar *n = g_strdup_printf(".zpotmpimg%d.jpg",i);
-//
-//            cvSaveImage(n, tmp,0);
-//        }
+        for(int i = 0; i <= RANGE_MAX; i++)
+        {
+            Mat *tmpMat = new Mat(opencvMatImage);
+
+            //*tmpMat = opencvMatImage.clone();
+
+
+            float ratio = (float) i/RANGE_MAX;
+
+            morph((src_imgdata.ocvMatImage), (dst_imgdata.ocvMatImage), *tmpMat, (src_imgdata.ocvMatGrid), (dst_imgdata.ocvMatGrid), ratio);
+            //ocvMat2gtkImg(tmpMat, &img);
+
+            //play_data.images[i] = tmpMat;
+
+            IplImage *tmp = new IplImage(*tmpMat);
+            cvCvtColor(tmp, tmp, CV_BGR2RGB);
+
+           // GtkWidget *img = gtk_image_new ();
+           // ocvMat2gtkImg(tmpMat, &img);
+
+            //gtk_image_set_from_pixbuf(GTK_IMAGE(img), gdk_pixbuf_new_from_data((guchar*) tmp->imageData, GDK_COLORSPACE_RGB, FALSE, tmp->depth, tmp->width, tmp->height, (tmp->widthStep), NULL, NULL));
+
+           // g_array_append_val(play_data.images, tmpMat);
+
+            gchar *n = g_strdup_printf("zpotmpimg%d.jpg",i);
+
+            cvSaveImage(n, tmp,0);
+        }
 
       //  play_data.images = &imgs;
 
@@ -840,6 +854,8 @@ int main (int argc, char *argv[])
 //
 
     gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW (scrolled_window), image);
+
+    play_data.wnd = scrolled_window;
 
 
     hscale = gtk_hscale_new_with_range(RANGE_MIN, RANGE_MAX, RANGE_STEP);

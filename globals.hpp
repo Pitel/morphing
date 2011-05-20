@@ -37,6 +37,7 @@ typedef struct play
 {
    // GtkWidget *hscale; //slider
     GtkWidget *imageGTK;
+    GtkWidget *wnd;
     Mat     **images; //array of images
     gboolean   playing;
 } TPLay;
